@@ -230,19 +230,33 @@
             filter: brightness(1.2);
         }
 
+        .btn-group {
+            display: flex;
+            gap: 4px;
+        }
+
         .rec-btn {
             background: transparent;
             border: 1px solid var(--danger-color);
             color: var(--danger-color);
-            padding: 2px 8px;
+            padding: 2px 6px;
             border-radius: 4px;
             font-size: 10px;
             cursor: pointer;
         }
 
-        .rec-btn:hover {
-            background: rgba(248, 81, 73, 0.2);
+        .play-solo-btn {
+            background: transparent;
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            cursor: pointer;
         }
+
+        .rec-btn:hover { background: rgba(248, 81, 73, 0.2); }
+        .play-solo-btn:hover { background: rgba(88, 166, 255, 0.2); }
 
         .rec-btn.recording {
             background: var(--danger-color);
@@ -285,7 +299,7 @@
     <div class="studio-container">
         
         <div class="panel master-controls">
-            <button id="playBtn">▶ Play Demo</button>
+            <button id="playBtn">▶ Play All</button>
             <div class="tempo-wrapper">
                 <label>BPM: <span id="bpmDisplay">120</span></label>
                 <input type="range" id="bpmSlider" min="60" max="200" value="120">
@@ -303,7 +317,7 @@
             <h3 style="margin-top: 0;">Vocal Layers</h3>
             <div class="instructions">
                 <strong>💡 Quick Tips:</strong> Drag blocks left/right to fix timing. Drag up/down to change tracks. <br>
-                <strong>Duplicate:</strong> Hold <code>Shift</code> while dragging. <strong>Cut:</strong> <code>Double-click</code> a block to split it. <strong>Delete:</strong> Drag block completely out.
+                <strong>Playback:</strong> Hit `▶ Play All` at the top to hear the beat and vocals together. Use `▶ Solo` on a track to hear just your voice.
             </div>
             <div id="vocal-container" style="margin-top: 20px;"></div>
             <div id="playhead-vocals" class="playhead"></div>
@@ -345,6 +359,7 @@
                 masterGain = audioCtx.createGain(); masterGain.connect(audioCtx.destination);
                 mixDest = audioCtx.createMediaStreamDestination(); masterGain.connect(mixDest);
                 createNoise(); initVocalRouting();
+                requestAnimationFrame(updateVisuals); // Start real-time visual loop
             }
             if (audioCtx.state === 'suspended') audioCtx.resume();
         }
@@ -430,7 +445,13 @@
                     }
                 }
             }
-            
+            timerID = window.setTimeout(scheduler, 25.0);
+        }
+
+        // --- NEW: Real-Time Visual Loop ---
+        function updateVisuals() {
+            if (!audioCtx) return;
+
             if (isPlaying) {
                 const loopDuration = STEPS * getSecondsPerStep();
                 const currentOffset = audioCtx.currentTime - loopStartTime;
@@ -438,14 +459,16 @@
                 const transformStr = `translateX(${pxPos}px)`;
                 if(playheadDrums) playheadDrums.style.transform = transformStr;
                 if(playheadVocals) playheadVocals.style.transform = transformStr;
-
-                if (isRecording && activeRecordingBlock) {
-                    const elapsed = audioCtx.currentTime - recordingStartTime;
-                    const widthPx = (elapsed / loopDuration) * (STEPS * STEP_WIDTH_PX);
-                     activeRecordingBlock.style.width = `${Math.max(10, widthPx)}px`;
-                }
             }
-            timerID = window.setTimeout(scheduler, 25.0);
+
+            if (isRecording && activeRecordingBlock) {
+                const elapsed = audioCtx.currentTime - recordingStartTime;
+                const loopDuration = STEPS * getSecondsPerStep();
+                const widthPx = (elapsed / loopDuration) * (STEPS * STEP_WIDTH_PX);
+                activeRecordingBlock.style.width = `${Math.max(10, widthPx)}px`;
+            }
+
+            requestAnimationFrame(updateVisuals);
         }
 
         function stopAllVocals() {
@@ -464,12 +487,12 @@
                 if(playheadDrums) playheadDrums.style.display = 'block'; 
                 if(playheadVocals) playheadVocals.style.display = 'block'; 
                 scheduler();
-                e.target.innerText = "⏸ Stop Demo"; e.target.style.backgroundColor = 'var(--danger-color)';
+                e.target.innerText = "⏸ Stop All"; e.target.style.backgroundColor = 'var(--danger-color)';
             } else {
                 window.clearTimeout(timerID); stopAllVocals();      
                 if(playheadDrums) playheadDrums.style.display = 'none'; 
                 if(playheadVocals) playheadVocals.style.display = 'none';
-                e.target.innerText = "▶ Play Demo"; e.target.style.backgroundColor = 'var(--primary-color)';
+                e.target.innerText = "▶ Play All"; e.target.style.backgroundColor = 'var(--primary-color)';
             }
         });
 
@@ -507,12 +530,17 @@
                 const row = document.createElement('div'); row.className = 'layout-row';
                 
                 const header = document.createElement('div'); header.className = 'row-header';
+                
+                // NEW UI: Added a dedicated Solo Play button so recording and playing are separated
                 header.innerHTML = `
                     <div class="track-name">
                         Vox ${index + 1}
-                        <button class="rec-btn ${isRecording && activeRecTrack === track.id ? 'recording' : ''}" onclick="toggleRecord('${track.id}')">
-                            ${isRecording && activeRecTrack === track.id ? '⏹' : '🔴'}
-                        </button>
+                        <div class="btn-group">
+                            <button class="rec-btn ${isRecording && activeRecTrack === track.id ? 'recording' : ''}" onclick="toggleRecord('${track.id}')">
+                                ${isRecording && activeRecTrack === track.id ? '⏹' : '🔴 Rec'}
+                            </button>
+                            <button class="play-solo-btn" onclick="playSoloTrack('${track.id}')">▶ Solo</button>
+                        </div>
                     </div>
                     <div class="track-controls"><span class="control-label">Vol</span><input type="range" class="mini-slider" min="0" max="2" step="0.1" value="${track.volume}" onchange="updateVoxFX('${track.id}', 'vol', this.value)"></div>
                     <div class="track-controls"><span class="control-label">Pitch</span><input type="range" class="mini-slider" min="0.5" max="1.5" step="0.1" value="${track.pitch}" onchange="updateVoxFX('${track.id}', 'pitch', this.value)"></div>
@@ -540,6 +568,22 @@
                  createRecordingBlock(activeRecTrack);
              }
         }
+
+        // --- NEW: Play a single track to check your voice ---
+        window.playSoloTrack = (trackId) => {
+            initAudio();
+            stopAllVocals(); 
+            audioClips.forEach(clip => {
+                if(clip.trackId === trackId) {
+                    const source = audioCtx.createBufferSource();
+                    source.buffer = clip.buffer;
+                    const track = vocalTracks.find(t => t.id === trackId);
+                    source.connect(track.gainNode);
+                    source.start(0);
+                    clip.sourceNode = source;
+                }
+            });
+        };
 
         function createRecordingBlock(trackId) {
              const trackEl = document.getElementById(`timeline-${trackId}`);
