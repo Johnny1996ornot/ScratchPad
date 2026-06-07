@@ -1,0 +1,266 @@
+:root {
+    --bg-color: #0d1117;
+    --panel-bg: #161b22;
+    --panel-border: #30363d;
+    --primary-color: #58a6ff;
+    --danger-color: #f85149;
+    --success-color: #2ea043;
+    --text-color: #c9d1d9;
+    --cell-empty: #21262d;
+    --cell-kick: #ff7b72;
+    --cell-snare: #d2a8ff;
+    --cell-hihat: #7ee787;
+    --cell-current: rgba(242, 204, 96, 0.5);
+    --track-bg: #090c10;
+    --clip-color: #1f6feb;
+    --header-width: 200px;
+    --step-width: 40px;
+    --grid-width: 640px;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    margin: 0;
+    min-height: 100vh;
+    user-select: none;
+}
+
+h1 {
+    font-weight: 800;
+    letter-spacing: 2px;
+    margin-bottom: 5px;
+    color: #ffffff;
+}
+
+.subtitle {
+    color: #8b949e;
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+
+.studio-container {
+    width: 100%;
+    max-width: 1000px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.panel {
+    background-color: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 8px;
+    padding: 20px;
+    position: relative;
+    overflow-x: auto;
+}
+
+.master-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.tempo-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+}
+
+button {
+    background-color: var(--primary-color);
+    color: #ffffff;
+    border: none;
+    padding: 10px 15px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: 0.1s;
+}
+
+button:active {
+    transform: scale(0.97);
+}
+
+button.action-btn {
+    background-color: var(--success-color);
+}
+
+#addVocalTrackBtn {
+    margin-top: 15px;
+    background: transparent;
+    border: 1px solid #58a6ff;
+    color: #58a6ff;
+}
+
+.layout-row {
+    display: flex;
+    margin-bottom: 8px;
+    align-items: center;
+    width: 100%;
+    min-width: 860px;
+}
+
+.row-header {
+    width: var(--header-width);
+    flex-shrink: 0;
+    padding-right: 15px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.row-content {
+    width: var(--grid-width);
+    min-width: var(--grid-width);
+    height: 40px;
+    position: relative;
+    background-color: var(--track-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.drum-grid {
+    display: grid;
+    grid-template-columns: repeat(16, 1fr);
+    width: 100%;
+    height: 100%;
+}
+
+.cell {
+    border-right: 1px solid var(--panel-border);
+    cursor: pointer;
+    box-sizing: border-box;
+    background-color: var(--cell-empty);
+    height: 100%;
+    width: 100%;
+}
+
+.cell:last-child {
+    border-right: none;
+}
+
+.cell:nth-child(4n + 1) {
+    border-left: 2px solid #30363d;
+}
+
+.cell[data-type="kick"].active { background-color: var(--cell-kick); }
+.cell[data-type="snare"].active { background-color: var(--cell-snare); }
+.cell[data-type="hihat"].active { background-color: var(--cell-hihat); }
+
+.track-name {
+    font-weight: bold;
+    font-size: 12px;
+    color: #c9d1d9;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.track-controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-top: 4px;
+}
+
+.mini-slider {
+    width: 60px;
+    accent-color: var(--primary-color);
+    cursor: pointer;
+}
+
+.control-label {
+    font-size: 10px;
+    color: #8b949e;
+}
+
+.timeline-track {
+    height: 60px;
+    background-color: var(--track-bg);
+    background-image: linear-gradient(to right, #21262d 1px, transparent 1px);
+    background-size: var(--step-width) 100%;
+}
+
+.audio-clip {
+    position: absolute;
+    height: 80%;
+    top: 10%;
+    background-color: var(--clip-color);
+    border: 1px solid #79c0ff;
+    border-radius: 4px;
+    cursor: grab;
+    overflow: hidden;
+    box-sizing: border-box;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.audio-clip:active {
+    cursor: grabbing;
+    filter: brightness(1.2);
+}
+
+.rec-btn {
+    background: transparent;
+    border: 1px solid var(--danger-color);
+    color: var(--danger-color);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    cursor: pointer;
+}
+
+.rec-btn:hover {
+    background: rgba(248, 81, 73, 0.2);
+}
+
+.rec-btn.recording {
+    background: var(--danger-color);
+    color: white;
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.6; }
+    100% { opacity: 1; }
+}
+
+.playhead {
+    position: absolute;
+    top: 0;
+    width: 2px;
+    height: 100%;
+    background-color: var(--cell-current);
+    pointer-events: none;
+    display: none;
+    box-shadow: 0 0 10px var(--cell-current);
+    z-index: 10;
+    left: calc(var(--header-width) + 20px);
+}
+
+.instructions {
+    font-size: 12px;
+    color: #8b949e;
+    background: #090c10;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #30363d;
+}
