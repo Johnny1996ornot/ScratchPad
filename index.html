@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BeatBox - Timeline Studio</title>
+    <link rel="stylesheet" href="style.css?v=v2">
+</head>
+<body>
+    <h1>BEATBOX</h1>
+    <div class="subtitle">Timeline Demo Studio</div>
+    <div class="studio-container">
+        
+        <div class="panel master-controls">
+            <button id="playBtn">▶ Play Demo</button>
+            <div class="tempo-wrapper">
+                <label>BPM: <span id="bpmDisplay">120</span></label>
+                <input type="range" id="bpmSlider" min="60" max="200" value="120">
+            </div>
+            <button id="downloadBtn" class="action-btn">⬇ Download Mix</button>
+        </div>
+
+        <div class="panel">
+            <h3>Drums</h3>
+            <div id="drum-container"></div>
+            <div id="playhead-drums" class="playhead"></div>
+        </div>
+
+        <div class="panel">
+            <h3 style="margin-top: 0;">Vocal Layers</h3>
+            <div class="instructions">
+                <strong>💡 Quick Tips:</strong> Drag blocks left/right to fix timing. Drag up/down to change tracks. <br>
+                <strong>Duplicate:</strong> Hold <code>Shift</code> while dragging. <strong>Cut:</strong> <code>Double-click</code> a block to split it. <strong>Delete:</strong> Drag block completely out.
+            </div>
+            <div id="vocal-container" style="margin-top: 20px;"></div>
+            <div id="playhead-vocals" class="playhead"></div>
+            
+            <button id="addVocalTrackBtn">+ Add Empty Track</button>
+        </div>
+    </div>
+    <script src="script.js?v=v2" defer></script>
+</body>
+</html>
