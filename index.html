@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BeatBox - Timeline Studio</title>
+    <title>BeatBox - Pro Studio</title>
     <style>
         :root {
             --bg-color: #0d1117;
@@ -22,7 +22,8 @@
             --clip-color: #1f6feb;
             --header-width: 200px;
             --step-width: 40px;
-            --grid-width: 640px;
+            --drum-width: 640px; /* 16 steps */
+            --timeline-width: 5120px; /* 128 steps (8 bars) */
         }
 
         body {
@@ -36,28 +37,13 @@
             margin: 0;
             min-height: 100vh;
             user-select: none;
+            overflow-x: hidden;
         }
 
-        h1 {
-            font-weight: 800;
-            letter-spacing: 2px;
-            margin-bottom: 5px;
-            color: #ffffff;
-        }
+        h1 { font-weight: 800; letter-spacing: 2px; margin-bottom: 5px; color: #ffffff; }
+        .subtitle { color: #8b949e; margin-bottom: 20px; font-size: 14px; }
 
-        .subtitle {
-            color: #8b949e;
-            margin-bottom: 20px;
-            font-size: 14px;
-        }
-
-        .studio-container {
-            width: 100%;
-            max-width: 1000px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
+        .studio-container { width: 100%; max-width: 1200px; display: flex; flex-direction: column; gap: 15px; }
 
         .panel {
             background-color: var(--panel-bg);
@@ -65,241 +51,92 @@
             border-radius: 8px;
             padding: 20px;
             position: relative;
-            overflow-x: auto;
         }
 
-        .master-controls {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .tempo-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 14px;
-        }
+        .master-controls { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+        .tempo-wrapper { display: flex; align-items: center; gap: 10px; font-size: 14px; }
 
         button {
-            background-color: var(--primary-color);
-            color: #ffffff;
-            border: none;
-            padding: 10px 15px;
-            font-size: 14px;
-            font-weight: 600;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: 0.1s;
+            background-color: var(--primary-color); color: #ffffff; border: none; padding: 10px 15px;
+            font-size: 14px; font-weight: 600; border-radius: 6px; cursor: pointer; transition: 0.1s;
         }
+        button:active { transform: scale(0.97); }
+        button.action-btn { background-color: var(--success-color); }
+        button.danger-btn { background-color: var(--danger-color); }
 
-        button:active {
-            transform: scale(0.97);
-        }
+        #addVocalTrackBtn { margin-top: 15px; background: transparent; border: 1px solid #58a6ff; color: #58a6ff; }
 
-        button.action-btn {
-            background-color: var(--success-color);
-        }
-
-        #addVocalTrackBtn {
-            margin-top: 15px;
-            background: transparent;
-            border: 1px solid #58a6ff;
-            color: #58a6ff;
-        }
-
-        .layout-row {
-            display: flex;
-            margin-bottom: 8px;
-            align-items: center;
-            width: 100%;
-            min-width: 860px;
-        }
+        .layout-row { display: flex; margin-bottom: 8px; align-items: center; width: 100%; }
 
         .row-header {
-            width: var(--header-width);
-            flex-shrink: 0;
-            padding-right: 15px;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
+            width: var(--header-width); flex-shrink: 0; padding-right: 15px; box-sizing: border-box;
+            display: flex; flex-direction: column; justify-content: center; z-index: 20;
+            background-color: var(--panel-bg);
         }
 
-        .row-content {
-            width: var(--grid-width);
-            min-width: var(--grid-width);
-            height: 40px;
-            position: relative;
-            background-color: var(--track-bg);
-            border: 1px solid var(--panel-border);
-            border-radius: 4px;
-            box-sizing: border-box;
+        /* Drum specific grid */
+        .drum-content {
+            width: var(--drum-width); min-width: var(--drum-width); height: 40px; position: relative;
+            background-color: var(--track-bg); border: 1px solid var(--panel-border); border-radius: 4px; box-sizing: border-box;
         }
-
-        .drum-grid {
-            display: grid;
-            grid-template-columns: repeat(16, 1fr);
+        
+        .drum-grid { display: grid; grid-template-columns: repeat(16, 1fr); height: 100%; }
+        
+        /* Vocal Timeline specific (Scrollable) */
+        .timeline-scroll-container {
+            width: 100%; overflow-x: auto; padding-bottom: 10px; position: relative;
+            border-left: 1px solid var(--panel-border);
+        }
+        .timeline-content {
+            width: var(--timeline-width); min-width: var(--timeline-width); height: 60px; position: relative;
+            background-color: var(--track-bg); border-top: 1px solid var(--panel-border); border-bottom: 1px solid var(--panel-border);
+            background-image: linear-gradient(to right, #21262d 1px, transparent 1px);
+            background-size: var(--step-width) 100%;
         }
 
         .cell {
-            border-right: 1px solid var(--panel-border);
-            cursor: pointer;
-            box-sizing: border-box;
-            background-color: var(--cell-empty);
-            height: 100%;
-            width: 100%;
+            border-right: 1px solid var(--panel-border); cursor: pointer; box-sizing: border-box; background-color: var(--cell-empty); height: 100%; width: 100%;
         }
-
-        .cell:last-child {
-            border-right: none;
-        }
-
-        .cell:nth-child(4n + 1) {
-            border-left: 2px solid #30363d;
-        }
-
+        .cell:last-child { border-right: none; }
+        .cell:nth-child(4n + 1) { border-left: 2px solid #30363d; }
         .cell[data-type="kick"].active { background-color: var(--cell-kick); }
         .cell[data-type="snare"].active { background-color: var(--cell-snare); }
         .cell[data-type="hihat"].active { background-color: var(--cell-hihat); }
 
-        .track-name {
-            font-weight: bold;
-            font-size: 12px;
-            color: #c9d1d9;
-            text-transform: uppercase;
-            margin-bottom: 4px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .track-controls {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            margin-top: 4px;
-        }
-
-        .mini-slider {
-            width: 60px;
-            accent-color: var(--primary-color);
-            cursor: pointer;
-        }
-
-        .control-label {
-            font-size: 10px;
-            color: #8b949e;
-        }
-
-        .timeline-track {
-            height: 60px;
-            background-color: var(--track-bg);
-            background-image: linear-gradient(to right, #21262d 1px, transparent 1px);
-            background-size: var(--step-width) 100%;
-            position: relative; 
-        }
+        .track-name { font-weight: bold; font-size: 12px; color: #c9d1d9; text-transform: uppercase; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; }
+        .track-controls { display: flex; gap: 8px; align-items: center; margin-top: 4px; }
+        .mini-slider { width: 60px; accent-color: var(--primary-color); cursor: pointer; }
+        .control-label { font-size: 10px; color: #8b949e; }
 
         .audio-clip {
-            position: absolute;
-            height: 80%;
-            top: 10%;
-            background-color: var(--clip-color);
-            border: 1px solid #79c0ff;
-            border-radius: 4px;
-            cursor: grab;
-            overflow: hidden;
-            box-sizing: border-box;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            position: absolute; height: 80%; top: 10%; background-color: var(--clip-color); border: 1px solid #79c0ff; border-radius: 4px;
+            cursor: grab; overflow: hidden; box-sizing: border-box; box-shadow: 0 4px 12px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;
         }
+        .audio-clip.recording-clip { background-color: rgba(248, 81, 73, 0.4); border: 1px dashed var(--danger-color); cursor: default; pointer-events: none; }
+        .audio-clip:active:not(.recording-clip) { cursor: grabbing; filter: brightness(1.2); }
 
-        .audio-clip.recording-clip {
-             background-color: rgba(248, 81, 73, 0.4); 
-             border: 1px dashed var(--danger-color);
-             cursor: default; 
-             pointer-events: none; 
-        }
-
-        .audio-clip:active:not(.recording-clip) {
-            cursor: grabbing;
-            filter: brightness(1.2);
-        }
-
-        .btn-group {
-            display: flex;
-            gap: 4px;
-        }
-
-        .rec-btn {
-            background: transparent;
-            border: 1px solid var(--danger-color);
-            color: var(--danger-color);
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 10px;
-            cursor: pointer;
-        }
-
-        .play-solo-btn {
-            background: transparent;
-            border: 1px solid var(--primary-color);
-            color: var(--primary-color);
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 10px;
-            cursor: pointer;
-        }
-
+        .btn-group { display: flex; gap: 4px; }
+        .rec-btn { background: transparent; border: 1px solid var(--danger-color); color: var(--danger-color); padding: 2px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; }
+        .play-solo-btn { background: transparent; border: 1px solid var(--primary-color); color: var(--primary-color); padding: 2px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; }
         .rec-btn:hover { background: rgba(248, 81, 73, 0.2); }
         .play-solo-btn:hover { background: rgba(88, 166, 255, 0.2); }
+        .rec-btn.recording { background: var(--danger-color); color: white; animation: pulse 1s infinite; }
 
-        .rec-btn.recording {
-            background: var(--danger-color);
-            color: white;
-            animation: pulse 1s infinite;
-        }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
 
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.6; }
-            100% { opacity: 1; }
-        }
+        .playhead-drums { position: absolute; top: 0; width: 2px; height: 100%; background-color: var(--cell-current); pointer-events: none; display: none; box-shadow: 0 0 10px var(--cell-current); z-index: 10; left: calc(var(--header-width) + 20px); }
+        .playhead-vocals { position: absolute; top: 0; width: 2px; height: 100%; background-color: var(--danger-color); pointer-events: none; display: none; z-index: 10; left: 0; }
 
-        .playhead {
-            position: absolute;
-            top: 0;
-            width: 2px;
-            height: 100%;
-            background-color: var(--cell-current);
-            pointer-events: none;
-            display: none;
-            box-shadow: 0 0 10px var(--cell-current);
-            z-index: 10;
-            left: calc(var(--header-width) + 20px);
-        }
-
-        .instructions {
-            font-size: 12px;
-            color: #8b949e;
-            background: #090c10;
-            padding: 10px;
-            border-radius: 6px;
-            border: 1px solid #30363d;
-        }
+        .instructions { font-size: 12px; color: #8b949e; background: #090c10; padding: 10px; border-radius: 6px; border: 1px solid #30363d; margin-bottom: 15px;}
     </style>
 </head>
 <body>
     <h1>BEATBOX</h1>
-    <div class="subtitle">Timeline Demo Studio</div>
+    <div class="subtitle">Linear Timeline Studio</div>
     <div class="studio-container">
         
         <div class="panel master-controls">
-            <button id="playBtn">▶ Play All</button>
+            <button id="playBtn">▶ Play Track</button>
             <div class="tempo-wrapper">
                 <label>BPM: <span id="bpmDisplay">120</span></label>
                 <input type="range" id="bpmSlider" min="60" max="200" value="120">
@@ -308,19 +145,27 @@
         </div>
 
         <div class="panel">
-            <h3>Drums</h3>
+            <h3>Drum Loop (1 Bar)</h3>
             <div id="drum-container"></div>
-            <div id="playhead-drums" class="playhead"></div>
+            <div id="playhead-drums" class="playhead-drums"></div>
         </div>
 
         <div class="panel">
-            <h3 style="margin-top: 0;">Vocal Layers</h3>
+            <h3 style="margin-top: 0;">Arrangement Timeline (8 Bars)</h3>
             <div class="instructions">
-                <strong>💡 Quick Tips:</strong> Drag blocks left/right to fix timing. Drag up/down to change tracks. <br>
-                <strong>Playback:</strong> Hit `▶ Play All` at the top to hear the beat and vocals together. Use `▶ Solo` on a track to hear just your voice.
+                <strong>🎙️ Recording:</strong> Put on headphones. Click <code>🔴 Rec</code> to start the beat and record your voice linearly. <br>
+                <strong>🎯 Snapping:</strong> Drag recorded blocks left/right to align them perfectly with the drum grid. <br>
+                <strong>🎧 Playback:</strong> <code>▶ Play Track</code> plays drums + vocals. <code>▶ Solo</code> plays ONLY the voice block.
             </div>
-            <div id="vocal-container" style="margin-top: 20px;"></div>
-            <div id="playhead-vocals" class="playhead"></div>
+            
+            <div style="display: flex; width: 100%;">
+                <div id="vocal-headers" style="width: var(--header-width); flex-shrink: 0;"></div>
+                <div class="timeline-scroll-container">
+                    <div id="vocal-timeline-container" style="position: relative;">
+                        <div id="playhead-vocals" class="playhead-vocals"></div>
+                        </div>
+                </div>
+            </div>
             
             <button id="addVocalTrackBtn">+ Add Empty Track</button>
         </div>
@@ -328,10 +173,21 @@
 
     <script>
         let audioCtx, masterGain, mixDest, noiseBuffer;
-        const STEPS = 16, STEP_WIDTH_PX = 40;
-        let tempo = 120, isPlaying = false, isRecording = false, activeRecTrack = null;
-        let currentStep = 0, nextNoteTime = 0.0, timerID, loopStartTime = 0;
-        let recordingStartTime = 0; 
+        const DRUM_STEPS = 16;
+        const TIMELINE_STEPS = 128; // 8 Bars total
+        const STEP_WIDTH_PX = 40;
+        
+        let tempo = 120;
+        let isPlaying = false;
+        let isRecording = false;
+        let activeRecTrack = null;
+        
+        let globalStartTime = 0;
+        let absoluteStepCounter = 0; // Tracks total steps since play pressed
+        let nextNoteTime = 0.0;
+        let timerID;
+        
+        let recordingStartOffset = 0; 
         let activeRecordingBlock = null; 
 
         const drumTracks = [
@@ -341,15 +197,15 @@
         ];
 
         let vocalTracks = [
-            { id: 'vt-0', volume: 1.0, pitch: 1.0, echo: 0, gainNode: null, delayNode: null },
-            { id: 'vt-1', volume: 1.0, pitch: 1.0, echo: 0, gainNode: null, delayNode: null }
+            { id: 'vt-0', volume: 1.0, pitch: 1.0, echo: 0, gainNode: null, delayNode: null }
         ];
 
         let audioClips = [];
         let clipIdCounter = 0, mediaRec, audioChunks = [];
 
         const drumContainer = document.getElementById('drum-container');
-        const vocalContainer = document.getElementById('vocal-container');
+        const vocalHeaders = document.getElementById('vocal-headers');
+        const vocalTimelineContainer = document.getElementById('vocal-timeline-container');
         const playheadDrums = document.getElementById('playhead-drums');
         const playheadVocals = document.getElementById('playhead-vocals');
 
@@ -359,7 +215,7 @@
                 masterGain = audioCtx.createGain(); masterGain.connect(audioCtx.destination);
                 mixDest = audioCtx.createMediaStreamDestination(); masterGain.connect(mixDest);
                 createNoise(); initVocalRouting();
-                requestAnimationFrame(updateVisuals); // Start real-time visual loop
+                requestAnimationFrame(updateVisuals);
             }
             if (audioCtx.state === 'suspended') audioCtx.resume();
         }
@@ -400,8 +256,7 @@
                 const noise = audioCtx.createBufferSource(), filter = audioCtx.createBiquadFilter(), gain = audioCtx.createGain();
                 noise.buffer = noiseBuffer; filter.type = 'highpass'; filter.frequency.value = 1000 * pitch;
                 gain.gain.setValueAtTime(1, time); gain.gain.exponentialRampToValueAtTime(0.01, time + 0.2);
-                noise.connect(filter).connect(gain).connect(masterGain); noise.start(time);
-                noise.stop(time + 0.2);
+                noise.connect(filter).connect(gain).connect(masterGain); noise.start(time); noise.stop(time + 0.2);
                 const osc = audioCtx.createOscillator(), oGain = audioCtx.createGain();
                 osc.type = 'triangle'; osc.connect(oGain).connect(masterGain);
                 osc.frequency.setValueAtTime(250 * pitch, time); oGain.gain.setValueAtTime(0.7, time);
@@ -411,61 +266,82 @@
                 const noise = audioCtx.createBufferSource(), filter = audioCtx.createBiquadFilter(), gain = audioCtx.createGain();
                 noise.buffer = noiseBuffer; filter.type = 'highpass'; filter.frequency.value = 7000 * pitch;
                 gain.gain.setValueAtTime(0.5, time); gain.gain.exponentialRampToValueAtTime(0.01, time + 0.05);
-                noise.connect(filter).connect(gain).connect(masterGain); noise.start(time);
-                noise.stop(time + 0.05);
+                noise.connect(filter).connect(gain).connect(masterGain); noise.start(time); noise.stop(time + 0.05);
             }
         }
 
-        function getSecondsPerStep() { 
-            return (60.0 / tempo) * 0.25;
+        function getSecondsPerStep() { return (60.0 / tempo) * 0.25; }
+
+        function startGlobalPlayback() {
+            initAudio();
+            stopAllVocals();
+            globalStartTime = audioCtx.currentTime + 0.05;
+            absoluteStepCounter = 0;
+            nextNoteTime = globalStartTime;
+            isPlaying = true;
+            playheadDrums.style.display = 'block';
+            playheadVocals.style.display = 'block';
+
+            // Schedule ALL vocal clips exactly once on the absolute timeline
+            audioClips.forEach(clip => {
+                const track = vocalTracks.find(t => t.id === clip.trackId);
+                if (!track) return;
+                const source = audioCtx.createBufferSource();
+                source.buffer = clip.buffer;    
+                source.playbackRate.value = track.pitch;
+                source.connect(track.gainNode);
+                // Start exactly at global start + the clip's specific offset time
+                source.start(globalStartTime + clip.startTimeOffset);
+                clip.sourceNode = source;               
+            });
+
+            scheduler();
         }
 
         function scheduler() {
+            if (!isPlaying) return;
+            
             while (nextNoteTime < audioCtx.currentTime + 0.1) {
-                drumTracks.forEach(t => { if (t.pattern[currentStep]) playDrum(t.type, t.pitch, nextNoteTime); });
-                nextNoteTime += getSecondsPerStep();
-                currentStep++;
-                
-                if (currentStep >= STEPS) {
-                    currentStep = 0;
-                    loopStartTime = nextNoteTime;
-                    
-                    if(!isRecording) {
-                        stopAllVocals();
-                        audioClips.forEach(clip => {
-                            const track = vocalTracks.find(t => t.id === clip.trackId);
-                            if (!track) return;
-                            const source = audioCtx.createBufferSource();
-                            source.buffer = clip.buffer;    
-                            source.playbackRate.value = track.pitch;
-                            source.connect(track.gainNode);
-                            source.start(loopStartTime + (clip.startStep * getSecondsPerStep()));
-                            clip.sourceNode = source;               
-                        });
-                    }
+                // Stop automatically if we reach the end of the 8-bar timeline
+                if (absoluteStepCounter >= TIMELINE_STEPS) {
+                    document.getElementById('playBtn').click();
+                    return;
                 }
+
+                // Modulo math ensures the drums loop every 16 steps independently!
+                let drumPatternIndex = absoluteStepCounter % DRUM_STEPS;
+                
+                drumTracks.forEach(t => { 
+                    if (t.pattern[drumPatternIndex]) playDrum(t.type, t.pitch, nextNoteTime); 
+                });
+                
+                nextNoteTime += getSecondsPerStep();
+                absoluteStepCounter++;
             }
             timerID = window.setTimeout(scheduler, 25.0);
         }
 
-        // --- NEW: Real-Time Visual Loop ---
         function updateVisuals() {
             if (!audioCtx) return;
 
             if (isPlaying) {
-                const loopDuration = STEPS * getSecondsPerStep();
-                const currentOffset = audioCtx.currentTime - loopStartTime;
-                const pxPos = (currentOffset % loopDuration) / loopDuration * (STEPS * STEP_WIDTH_PX);
-                const transformStr = `translateX(${pxPos}px)`;
-                if(playheadDrums) playheadDrums.style.transform = transformStr;
-                if(playheadVocals) playheadVocals.style.transform = transformStr;
-            }
+                const currentOffset = audioCtx.currentTime - globalStartTime;
+                
+                // Drum Playhead: Loops every 16 steps
+                const loopDuration = DRUM_STEPS * getSecondsPerStep();
+                const drumPxPos = (currentOffset % loopDuration) / loopDuration * (DRUM_STEPS * STEP_WIDTH_PX);
+                if(playheadDrums) playheadDrums.style.transform = `translateX(${drumPxPos}px)`;
 
-            if (isRecording && activeRecordingBlock) {
-                const elapsed = audioCtx.currentTime - recordingStartTime;
-                const loopDuration = STEPS * getSecondsPerStep();
-                const widthPx = (elapsed / loopDuration) * (STEPS * STEP_WIDTH_PX);
-                activeRecordingBlock.style.width = `${Math.max(10, widthPx)}px`;
+                // Vocal Playhead: Moves continuously across the 128 step timeline
+                const vocalPxPos = (currentOffset / getSecondsPerStep()) * STEP_WIDTH_PX;
+                if(playheadVocals) playheadVocals.style.transform = `translateX(${vocalPxPos}px)`;
+
+                // Grow the recording block in real-time
+                if (isRecording && activeRecordingBlock) {
+                    const elapsed = currentOffset - recordingStartOffset;
+                    const widthPx = (elapsed / getSecondsPerStep()) * STEP_WIDTH_PX;
+                    activeRecordingBlock.style.width = `${Math.max(10, widthPx)}px`;
+                }
             }
 
             requestAnimationFrame(updateVisuals);
@@ -481,18 +357,23 @@
         }
 
         document.getElementById('playBtn').addEventListener('click', (e) => {
-            initAudio(); isPlaying = !isPlaying;
             if (isPlaying) {
-                currentStep = STEPS; nextNoteTime = audioCtx.currentTime + 0.05; 
-                if(playheadDrums) playheadDrums.style.display = 'block'; 
-                if(playheadVocals) playheadVocals.style.display = 'block'; 
-                scheduler();
-                e.target.innerText = "⏸ Stop All"; e.target.style.backgroundColor = 'var(--danger-color)';
-            } else {
-                window.clearTimeout(timerID); stopAllVocals();      
+                isPlaying = false;
+                window.clearTimeout(timerID); 
+                stopAllVocals();      
                 if(playheadDrums) playheadDrums.style.display = 'none'; 
                 if(playheadVocals) playheadVocals.style.display = 'none';
-                e.target.innerText = "▶ Play All"; e.target.style.backgroundColor = 'var(--primary-color)';
+                e.target.innerText = "▶ Play Track"; 
+                e.target.className = "";
+                
+                // If they hit stop while recording, stop the recorder too
+                if (isRecording && activeRecTrack) {
+                    window.toggleRecord(activeRecTrack);
+                }
+            } else {
+                startGlobalPlayback();
+                e.target.innerText = "⏸ Stop All"; 
+                e.target.className = "danger-btn";
             }
         });
 
@@ -501,14 +382,13 @@
             drumContainer.innerHTML = '';
             drumTracks.forEach(track => {
                 const row = document.createElement('div'); row.className = 'layout-row';
-                
                 const header = document.createElement('div'); header.className = 'row-header';
                 header.innerHTML = `<div class="track-name">${track.type}</div>
                                     <div class="track-controls"><span class="control-label">Pitch</span>                  
                                     <input type="range" class="mini-slider" min="0.5" max="2" step="0.1" value="${track.pitch}" oninput="updateDrumPitch('${track.id}', this.value)"></div>`;
                 
-                const grid = document.createElement('div'); grid.className = 'row-content drum-grid';
-                for (let i = 0; i < STEPS; i++) {
+                const grid = document.createElement('div'); grid.className = 'drum-content drum-grid';
+                for (let i = 0; i < DRUM_STEPS; i++) {
                     const cell = document.createElement('div');
                     cell.className = `cell ${track.pattern[i] ? 'active' : ''}`;        
                     cell.dataset.type = track.type;
@@ -519,19 +399,23 @@
             });
         }
 
-        window.updateDrumPitch = (id, val) => { 
-            drumTracks.find(t => t.id === id).pitch = parseFloat(val);
-        };
+        window.updateDrumPitch = (id, val) => { drumTracks.find(t => t.id === id).pitch = parseFloat(val); };
 
         function renderVocals() {
-            if (!vocalContainer) return;
-            vocalContainer.innerHTML = '';
+            if (!vocalHeaders || !vocalTimelineContainer) return;
+            
+            // Clear existing elements except playhead
+            vocalHeaders.innerHTML = '';
+            Array.from(vocalTimelineContainer.children).forEach(child => {
+                if(child.id !== 'playhead-vocals') child.remove();
+            });
+
             vocalTracks.forEach((track, index) => {
-                const row = document.createElement('div'); row.className = 'layout-row';
+                // Render Headers (Left Side)
+                const header = document.createElement('div'); 
+                header.style.height = '60px'; header.style.paddingRight = '15px'; header.style.display = 'flex'; 
+                header.style.flexDirection = 'column'; header.style.justifyContent = 'center'; header.style.borderBottom = '1px solid #30363d';
                 
-                const header = document.createElement('div'); header.className = 'row-header';
-                
-                // NEW UI: Added a dedicated Solo Play button so recording and playing are separated
                 header.innerHTML = `
                     <div class="track-name">
                         Vox ${index + 1}
@@ -542,22 +426,33 @@
                             <button class="play-solo-btn" onclick="playSoloTrack('${track.id}')">▶ Solo</button>
                         </div>
                     </div>
-                    <div class="track-controls"><span class="control-label">Vol</span><input type="range" class="mini-slider" min="0" max="2" step="0.1" value="${track.volume}" onchange="updateVoxFX('${track.id}', 'vol', this.value)"></div>
-                    <div class="track-controls"><span class="control-label">Pitch</span><input type="range" class="mini-slider" min="0.5" max="1.5" step="0.1" value="${track.pitch}" onchange="updateVoxFX('${track.id}', 'pitch', this.value)"></div>
-                    <div class="track-controls"><span class="control-label">Echo</span><input type="range" class="mini-slider" min="0" max="1" step="0.1" value="${track.echo}" onchange="updateVoxFX('${track.id}', 'echo', this.value)"></div>
+                    <div class="track-controls">
+                        <span class="control-label">Vol</span><input type="range" class="mini-slider" min="0" max="2" step="0.1" value="${track.volume}" onchange="updateVoxFX('${track.id}', 'vol', this.value)">
+                        <span class="control-label">Echo</span><input type="range" class="mini-slider" min="0" max="1" step="0.1" value="${track.echo}" onchange="updateVoxFX('${track.id}', 'echo', this.value)">
+                    </div>
                 `;
-                const trackTimeline = document.createElement('div'); trackTimeline.className = 'row-content timeline-track'; trackTimeline.id = `timeline-${track.id}`;
-                row.appendChild(header); row.appendChild(trackTimeline); vocalContainer.appendChild(row);
+                vocalHeaders.appendChild(header);
+
+                // Render Timeline Track (Scrollable Right Side)
+                const trackTimeline = document.createElement('div'); 
+                trackTimeline.className = 'timeline-content'; 
+                trackTimeline.id = `timeline-${track.id}`;
+                vocalTimelineContainer.appendChild(trackTimeline);
             });
 
+            // Render existing audio clips on the timeline
             audioClips.forEach(clip => {
                 const trackEl = document.getElementById(`timeline-${clip.trackId}`);
                 if (!trackEl) return;
-                const clipEl = document.createElement('div'); clipEl.className = 'audio-clip'; clipEl.id = clip.id;
-                const widthPx = (clip.buffer.duration / (STEPS * getSecondsPerStep())) * (STEPS * STEP_WIDTH_PX);
-                clipEl.style.left = `${clip.startStep * STEP_WIDTH_PX}px`;
-                clipEl.style.width = `${Math.max(20, widthPx)}px`;
                 
+                const clipEl = document.createElement('div'); clipEl.className = 'audio-clip'; clipEl.id = clip.id;
+                
+                // Calculate position and width based on seconds, converted to pixels
+                const widthPx = (clip.buffer.duration / getSecondsPerStep()) * STEP_WIDTH_PX;
+                const leftPx = (clip.startTimeOffset / getSecondsPerStep()) * STEP_WIDTH_PX;
+                
+                clipEl.style.left = `${leftPx}px`;
+                clipEl.style.width = `${Math.max(20, widthPx)}px`;
                 clipEl.appendChild(generateWaveformCanvas(clip.buffer));  
                 clipEl.addEventListener('mousedown', handleClipDragStart);
                 clipEl.addEventListener('dblclick', (e) => handleClipSplit(e, clip));
@@ -569,7 +464,7 @@
              }
         }
 
-        // --- NEW: Play a single track to check your voice ---
+        // --- PLAY SOLO: Plays only this audio buffer, no drums ---
         window.playSoloTrack = (trackId) => {
             initAudio();
             stopAllVocals(); 
@@ -592,21 +487,15 @@
              activeRecordingBlock = document.createElement('div');
              activeRecordingBlock.className = 'audio-clip recording-clip';
              
-             let startPos = 0;
-             if (isPlaying) {
-                 const loopDuration = STEPS * getSecondsPerStep();
-                 startPos = ((audioCtx.currentTime - loopStartTime) % loopDuration) / loopDuration * (STEPS * STEP_WIDTH_PX);
-             }
-             
-             activeRecordingBlock.style.left = `${startPos}px`;
+             const startPx = (recordingStartOffset / getSecondsPerStep()) * STEP_WIDTH_PX;
+             activeRecordingBlock.style.left = `${startPx}px`;
              activeRecordingBlock.style.width = '10px'; 
              trackEl.appendChild(activeRecordingBlock);
         }
 
         function generateWaveformCanvas(buffer) {
             const canvas = document.createElement('canvas');
-            canvas.width = 400; canvas.height = 50;
-            canvas.style.width = '100%'; canvas.style.height = '100%'; canvas.style.pointerEvents = 'none';
+            canvas.width = 400; canvas.height = 50; canvas.style.width = '100%'; canvas.style.height = '100%'; canvas.style.pointerEvents = 'none';
             const ctx = canvas.getContext('2d'), data = buffer.getChannelData(0), amp = canvas.height / 2;
             const step = Math.ceil(data.length / canvas.width);
             ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
@@ -630,7 +519,6 @@
             const track = vocalTracks.find(t => t.id === id);
             val = parseFloat(val);
             if (param === 'vol') track.volume = val; 
-            if (param === 'pitch') track.pitch = val;
             if (param === 'echo') track.echo = val;
             updateTrackFX(track);
         };
@@ -663,26 +551,30 @@
                         const blob = new Blob(audioChunks, { type: mediaRec.mimeType || 'audio/webm' });
                         const arrayBuffer = await blob.arrayBuffer();
                         const audioBuf = await audioCtx.decodeAudioData(arrayBuffer);
-                        
-                        let startStep = 0;
-                        if (isPlaying) {
-                            const loopDuration = STEPS * getSecondsPerStep();
-                            startStep = ((recordingStartTime - loopStartTime) % loopDuration) / getSecondsPerStep();
-                        }
 
-                        audioClips.push({ id: `clip-${clipIdCounter++}`, buffer: audioBuf, trackId: trackId, startStep: startStep, sourceNode: null });
+                        audioClips.push({ 
+                            id: `clip-${clipIdCounter++}`, 
+                            buffer: audioBuf, 
+                            trackId: trackId, 
+                            startTimeOffset: recordingStartOffset, // Exact time on timeline
+                            sourceNode: null 
+                        });
                         stream.getTracks().forEach(t => t.stop()); 
                         renderVocals();
                     } catch (err) {
                         console.error("Audio decoding failed:", err);
-                        alert("Failed to process the recording. Your browser might be blocking the specific audio format.");
+                        alert("Recording processing failed.");
                     }
                 };
                 
-                if (!isPlaying) document.getElementById('playBtn').click();
+                // Ensure track is playing before starting record logic
+                if (!isPlaying) {
+                    document.getElementById('playBtn').click();
+                }
                 
                 setTimeout(() => {
-                    recordingStartTime = audioCtx.currentTime;
+                    // Record exact starting position on the 8-bar timeline
+                    recordingStartOffset = audioCtx.currentTime - globalStartTime;
                     mediaRec.start(); 
                     isRecording = true; 
                     activeRecTrack = trackId; 
@@ -702,27 +594,36 @@
             let clip = audioClips.find(c => c.id === e.target.closest('.audio-clip').id);
             
             if (isShiftDown) {
-                const newClip = { id: `clip-${clipIdCounter++}`, buffer: clip.buffer, trackId: clip.trackId, startStep: clip.startStep, sourceNode: null };
+                const newClip = { id: `clip-${clipIdCounter++}`, buffer: clip.buffer, trackId: clip.trackId, startTimeOffset: clip.startTimeOffset, sourceNode: null };
                 audioClips.push(newClip); clip = newClip; renderVocals();
             }
             const clipEl = document.getElementById(clip.id);
+            const startMouseX = e.clientX;
+            const startClipLeft = parseFloat(clipEl.style.left) || 0;
             
             const onMouseMove = (moveEvent) => {
                 let targetTrackId = clip.trackId, foundTrackEl = null;
-                document.querySelectorAll('.timeline-track').forEach(tEl => {
+                document.querySelectorAll('.timeline-content').forEach(tEl => {
                     const r = tEl.getBoundingClientRect();
                     if (moveEvent.clientY >= r.top && moveEvent.clientY <= r.bottom) { 
                         targetTrackId = tEl.id.replace('timeline-', ''); 
                         foundTrackEl = tEl; 
                     }
                 });
+                
                 if (foundTrackEl) {
-                    const r = foundTrackEl.getBoundingClientRect();
-                    let xPos = Math.max(0, moveEvent.clientX - r.left);
-                    xPos = Math.round(xPos / (STEP_WIDTH_PX/2)) * (STEP_WIDTH_PX/2); 
+                    // Calculate raw movement
+                    let rawXPos = startClipLeft + (moveEvent.clientX - startMouseX);
+                    rawXPos = Math.max(0, rawXPos);
+                    
+                    // Grid Snapping: Snaps to half-steps (20px) to easily align with drum notes
+                    const snapPx = STEP_WIDTH_PX / 2;
+                    let snappedXPos = Math.round(rawXPos / snapPx) * snapPx;
+                    
                     clip.trackId = targetTrackId;
-                    clip.startStep = xPos / STEP_WIDTH_PX;
-                    clipEl.style.left = `${xPos}px`;
+                    clip.startTimeOffset = (snappedXPos / STEP_WIDTH_PX) * getSecondsPerStep();
+                    
+                    clipEl.style.left = `${snappedXPos}px`;
                     if(clipEl.parentElement !== foundTrackEl) foundTrackEl.appendChild(clipEl);
                     clipEl.style.opacity = '1';
                 } else { 
@@ -732,7 +633,7 @@
             
             const onMouseUp = (upEvent) => {
                 window.removeEventListener('mousemove', onMouseMove); window.removeEventListener('mouseup', onMouseUp);
-                const r = vocalContainer.getBoundingClientRect();
+                const r = vocalTimelineContainer.getBoundingClientRect();
                 if (upEvent.clientY < r.top - 50 || upEvent.clientY > r.bottom + 50) audioClips = audioClips.filter(c => c.id !== clip.id);
                 renderVocals();
             };
@@ -750,7 +651,8 @@
             buf2.copyToChannel(clip.buffer.getChannelData(0).slice(splitTime), 0);
             
             clip.buffer = buf1;
-            audioClips.push({ id: `clip-${clipIdCounter++}`, buffer: buf2, trackId: clip.trackId, startStep: clip.startStep + (clickRatio * (clip.buffer.duration / getSecondsPerStep())), sourceNode: null });
+            const extraTimeOffset = clickRatio * clip.buffer.duration;
+            audioClips.push({ id: `clip-${clipIdCounter++}`, buffer: buf2, trackId: clip.trackId, startTimeOffset: clip.startTimeOffset + extraTimeOffset, sourceNode: null });
             renderVocals();
         }
 
@@ -761,22 +663,20 @@
             mixRec.onstop = () => {
                 const a = document.createElement('a');
                 a.href = URL.createObjectURL(new Blob(chunks, { type: 'audio/webm' })); 
-                a.download = `BeatBox_Mix.webm`; 
+                a.download = `BeatBox_ProMix.webm`; 
                 a.click();
-                btn.innerText = "⬇ Download Mix"; btn.style.backgroundColor = 'var(--success-color)';
+                btn.innerText = "⬇ Download Mix"; btn.className = 'action-btn';
             };
-            mixRec.start(); btn.innerText = "🔴 Bouncing... Click to stop"; btn.style.backgroundColor = 'var(--danger-color)';
+            mixRec.start(); btn.innerText = "🔴 Bouncing... Click to stop"; btn.className = 'danger-btn';
             setTimeout(() => document.getElementById('playBtn').click(), 100);
         };
 
         document.getElementById('bpmSlider').oninput = (e) => { 
-            tempo = e.target.value; 
-            document.getElementById('bpmDisplay').innerText = tempo; 
-            renderVocals(); 
+            tempo = e.target.value; document.getElementById('bpmDisplay').innerText = tempo; 
+            renderVocals(); // re-render to update clip widths based on tempo
         };
 
-        renderDrums(); 
-        renderVocals();
+        renderDrums(); renderVocals();
     </script>
 </body>
 </html>
