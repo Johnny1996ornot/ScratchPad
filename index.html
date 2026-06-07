@@ -142,7 +142,6 @@
         .drum-grid {
             display: grid;
             grid-template-columns: repeat(16, 1fr);
-            /* The 100% height bug has been nuked from here */
         }
 
         .cell {
@@ -200,6 +199,7 @@
             background-color: var(--track-bg);
             background-image: linear-gradient(to right, #21262d 1px, transparent 1px);
             background-size: var(--step-width) 100%;
+            position: relative; 
         }
 
         .audio-clip {
@@ -218,7 +218,14 @@
             justify-content: center;
         }
 
-        .audio-clip:active {
+        .audio-clip.recording-clip {
+             background-color: rgba(248, 81, 73, 0.4); 
+             border: 1px dashed var(--danger-color);
+             cursor: default; 
+             pointer-events: none; 
+        }
+
+        .audio-clip:active:not(.recording-clip) {
             cursor: grabbing;
             filter: brightness(1.2);
         }
@@ -310,6 +317,8 @@
         const STEPS = 16, STEP_WIDTH_PX = 40;
         let tempo = 120, isPlaying = false, isRecording = false, activeRecTrack = null;
         let currentStep = 0, nextNoteTime = 0.0, timerID, loopStartTime = 0;
+        let recordingStartTime = 0; 
+        let activeRecordingBlock = null; 
 
         const drumTracks = [
             { id: 'hihat', type: 'hihat', pitch: 1.0, pattern: [true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false] },
@@ -424,10 +433,17 @@
             
             if (isPlaying) {
                 const loopDuration = STEPS * getSecondsPerStep();
-                const pxPos = ((audioCtx.currentTime - loopStartTime) % loopDuration) / loopDuration * (STEPS * STEP_WIDTH_PX);
+                const currentOffset = audioCtx.currentTime - loopStartTime;
+                const pxPos = (currentOffset % loopDuration) / loopDuration * (STEPS * STEP_WIDTH_PX);
                 const transformStr = `translateX(${pxPos}px)`;
                 if(playheadDrums) playheadDrums.style.transform = transformStr;
                 if(playheadVocals) playheadVocals.style.transform = transformStr;
+
+                if (isRecording && activeRecordingBlock) {
+                    const elapsed = audioCtx.currentTime - recordingStartTime;
+                    const widthPx = (elapsed / loopDuration) * (STEPS * STEP_WIDTH_PX);
+                     activeRecordingBlock.style.width = `${Math.max(10, widthPx)}px`;
+                }
             }
             timerID = window.setTimeout(scheduler, 25.0);
         }
@@ -519,6 +535,28 @@
                 clipEl.addEventListener('dblclick', (e) => handleClipSplit(e, clip));
                 trackEl.appendChild(clipEl);
             });
+            
+             if (isRecording && activeRecTrack) {
+                 createRecordingBlock(activeRecTrack);
+             }
+        }
+
+        function createRecordingBlock(trackId) {
+             const trackEl = document.getElementById(`timeline-${trackId}`);
+             if (!trackEl) return;
+             
+             activeRecordingBlock = document.createElement('div');
+             activeRecordingBlock.className = 'audio-clip recording-clip';
+             
+             let startPos = 0;
+             if (isPlaying) {
+                 const loopDuration = STEPS * getSecondsPerStep();
+                 startPos = ((audioCtx.currentTime - loopStartTime) % loopDuration) / loopDuration * (STEPS * STEP_WIDTH_PX);
+             }
+             
+             activeRecordingBlock.style.left = `${startPos}px`;
+             activeRecordingBlock.style.width = '10px'; 
+             trackEl.appendChild(activeRecordingBlock);
         }
 
         function generateWaveformCanvas(buffer) {
@@ -561,7 +599,15 @@
         window.toggleRecord = async (trackId) => {
             if (isRecording) {
                 if (activeRecTrack !== trackId) return;
-                mediaRec.stop(); isRecording = false; activeRecTrack = null; renderVocals(); return;
+                mediaRec.stop(); 
+                isRecording = false; 
+                activeRecTrack = null; 
+                if (activeRecordingBlock) {
+                    activeRecordingBlock.remove();
+                    activeRecordingBlock = null;
+                }
+                renderVocals(); 
+                return;
             }
             initAudio();
             try {
@@ -574,13 +620,13 @@
                         const arrayBuffer = await blob.arrayBuffer();
                         const audioBuf = await audioCtx.decodeAudioData(arrayBuffer);
                         
-                        let startPos = 0;
+                        let startStep = 0;
                         if (isPlaying) {
                             const loopDuration = STEPS * getSecondsPerStep();
-                            startPos = ((audioCtx.currentTime - loopStartTime) % loopDuration) / getSecondsPerStep();
+                            startStep = ((recordingStartTime - loopStartTime) % loopDuration) / getSecondsPerStep();
                         }
 
-                        audioClips.push({ id: `clip-${clipIdCounter++}`, buffer: audioBuf, trackId: trackId, startStep: startPos, sourceNode: null });
+                        audioClips.push({ id: `clip-${clipIdCounter++}`, buffer: audioBuf, trackId: trackId, startStep: startStep, sourceNode: null });
                         stream.getTracks().forEach(t => t.stop()); 
                         renderVocals();
                     } catch (err) {
@@ -588,9 +634,15 @@
                         alert("Failed to process the recording. Your browser might be blocking the specific audio format.");
                     }
                 };
+                
                 if (!isPlaying) document.getElementById('playBtn').click();
+                
                 setTimeout(() => {
-                    mediaRec.start(); isRecording = true; activeRecTrack = trackId; renderVocals();
+                    recordingStartTime = audioCtx.currentTime;
+                    mediaRec.start(); 
+                    isRecording = true; 
+                    activeRecTrack = trackId; 
+                    renderVocals();
                 }, 100);
             } catch (err) { 
                 alert("Microphone access is required to record vocals. " + err);
