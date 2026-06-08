@@ -183,7 +183,7 @@
         let activeRecTrack = null;
         
         let globalStartTime = 0;
-        let absoluteStepCounter = 0; // Tracks total steps since play pressed
+        let absoluteStepCounter = 0;
         let nextNoteTime = 0.0;
         let timerID;
         
@@ -282,7 +282,6 @@
             playheadDrums.style.display = 'block';
             playheadVocals.style.display = 'block';
 
-            // Schedule ALL vocal clips exactly once on the absolute timeline
             audioClips.forEach(clip => {
                 const track = vocalTracks.find(t => t.id === clip.trackId);
                 if (!track) return;
@@ -290,7 +289,6 @@
                 source.buffer = clip.buffer;    
                 source.playbackRate.value = track.pitch;
                 source.connect(track.gainNode);
-                // Start exactly at global start + the clip's specific offset time
                 source.start(globalStartTime + clip.startTimeOffset);
                 clip.sourceNode = source;               
             });
@@ -302,13 +300,11 @@
             if (!isPlaying) return;
             
             while (nextNoteTime < audioCtx.currentTime + 0.1) {
-                // Stop automatically if we reach the end of the 8-bar timeline
                 if (absoluteStepCounter >= TIMELINE_STEPS) {
                     document.getElementById('playBtn').click();
                     return;
                 }
 
-                // Modulo math ensures the drums loop every 16 steps independently!
                 let drumPatternIndex = absoluteStepCounter % DRUM_STEPS;
                 
                 drumTracks.forEach(t => { 
@@ -326,24 +322,19 @@
 
             if (isPlaying) {
                 const currentOffset = audioCtx.currentTime - globalStartTime;
-                
-                // Drum Playhead: Loops every 16 steps
                 const loopDuration = DRUM_STEPS * getSecondsPerStep();
                 const drumPxPos = (currentOffset % loopDuration) / loopDuration * (DRUM_STEPS * STEP_WIDTH_PX);
                 if(playheadDrums) playheadDrums.style.transform = `translateX(${drumPxPos}px)`;
 
-                // Vocal Playhead: Moves continuously across the 128 step timeline
                 const vocalPxPos = (currentOffset / getSecondsPerStep()) * STEP_WIDTH_PX;
                 if(playheadVocals) playheadVocals.style.transform = `translateX(${vocalPxPos}px)`;
 
-                // Grow the recording block in real-time
                 if (isRecording && activeRecordingBlock) {
                     const elapsed = currentOffset - recordingStartOffset;
                     const widthPx = (elapsed / getSecondsPerStep()) * STEP_WIDTH_PX;
                     activeRecordingBlock.style.width = `${Math.max(10, widthPx)}px`;
                 }
             }
-
             requestAnimationFrame(updateVisuals);
         }
 
@@ -366,7 +357,6 @@
                 e.target.innerText = "▶ Play Track"; 
                 e.target.className = "";
                 
-                // If they hit stop while recording, stop the recorder too
                 if (isRecording && activeRecTrack) {
                     window.toggleRecord(activeRecTrack);
                 }
@@ -404,14 +394,12 @@
         function renderVocals() {
             if (!vocalHeaders || !vocalTimelineContainer) return;
             
-            // Clear existing elements except playhead
             vocalHeaders.innerHTML = '';
             Array.from(vocalTimelineContainer.children).forEach(child => {
                 if(child.id !== 'playhead-vocals') child.remove();
             });
 
             vocalTracks.forEach((track, index) => {
-                // Render Headers (Left Side)
                 const header = document.createElement('div'); 
                 header.style.height = '60px'; header.style.paddingRight = '15px'; header.style.display = 'flex'; 
                 header.style.flexDirection = 'column'; header.style.justifyContent = 'center'; header.style.borderBottom = '1px solid #30363d';
@@ -433,21 +421,19 @@
                 `;
                 vocalHeaders.appendChild(header);
 
-                // Render Timeline Track (Scrollable Right Side)
                 const trackTimeline = document.createElement('div'); 
                 trackTimeline.className = 'timeline-content'; 
                 trackTimeline.id = `timeline-${track.id}`;
                 vocalTimelineContainer.appendChild(trackTimeline);
             });
 
-            // Render existing audio clips on the timeline
             audioClips.forEach(clip => {
                 const trackEl = document.getElementById(`timeline-${clip.trackId}`);
                 if (!trackEl) return;
                 
                 const clipEl = document.createElement('div'); clipEl.className = 'audio-clip'; clipEl.id = clip.id;
                 
-                // Calculate position and width based on seconds, converted to pixels
+                // Perfect mathematical scaling directly tied to the BPM grid length
                 const widthPx = (clip.buffer.duration / getSecondsPerStep()) * STEP_WIDTH_PX;
                 const leftPx = (clip.startTimeOffset / getSecondsPerStep()) * STEP_WIDTH_PX;
                 
@@ -464,7 +450,6 @@
              }
         }
 
-        // --- PLAY SOLO: Plays only this audio buffer, no drums ---
         window.playSoloTrack = (trackId) => {
             initAudio();
             stopAllVocals(); 
@@ -556,7 +541,7 @@
                             id: `clip-${clipIdCounter++}`, 
                             buffer: audioBuf, 
                             trackId: trackId, 
-                            startTimeOffset: recordingStartOffset, // Exact time on timeline
+                            startTimeOffset: recordingStartOffset,
                             sourceNode: null 
                         });
                         stream.getTracks().forEach(t => t.stop()); 
@@ -567,13 +552,12 @@
                     }
                 };
                 
-                // Ensure track is playing before starting record logic
                 if (!isPlaying) {
                     document.getElementById('playBtn').click();
                 }
                 
                 setTimeout(() => {
-                    // Record exact starting position on the 8-bar timeline
+                    // Start exactly at the synchronized audio context time
                     recordingStartOffset = audioCtx.currentTime - globalStartTime;
                     mediaRec.start(); 
                     isRecording = true; 
@@ -612,11 +596,9 @@
                 });
                 
                 if (foundTrackEl) {
-                    // Calculate raw movement
                     let rawXPos = startClipLeft + (moveEvent.clientX - startMouseX);
                     rawXPos = Math.max(0, rawXPos);
                     
-                    // Grid Snapping: Snaps to half-steps (20px) to easily align with drum notes
                     const snapPx = STEP_WIDTH_PX / 2;
                     let snappedXPos = Math.round(rawXPos / snapPx) * snapPx;
                     
@@ -673,7 +655,7 @@
 
         document.getElementById('bpmSlider').oninput = (e) => { 
             tempo = e.target.value; document.getElementById('bpmDisplay').innerText = tempo; 
-            renderVocals(); // re-render to update clip widths based on tempo
+            renderVocals(); 
         };
 
         renderDrums(); renderVocals();
