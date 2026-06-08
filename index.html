@@ -47,25 +47,26 @@
         .track-row { display: flex; align-items: stretch; margin-bottom: 10px; border: 1px solid var(--border); border-radius: 6px; background: #090c10; }
         
         .track-header { 
-            width: 180px; padding: 10px; background: var(--surface); border-right: 1px solid var(--border);
-            display: flex; flex-direction: column; justify-content: center; gap: 6px; flex-shrink: 0;
+            width: 200px; padding: 12px; background: var(--surface); border-right: 1px solid var(--border);
+            display: flex; flex-direction: column; justify-content: center; gap: 8px; flex-shrink: 0;
         }
         
-        .track-content { flex: 1; position: relative; overflow: hidden; display: flex; align-items: center; padding: 4px; }
+        .track-content { flex: 1; position: relative; overflow: hidden; display: flex; align-items: center; padding: 6px; min-width: 600px; }
         
         /* Sliders */
-        .controls-grid { display: grid; grid-template-columns: 35px 1fr; gap: 4px; align-items: center; }
-        .controls-grid span { font-size: 10px; color: var(--text-muted); }
+        .controls-grid { display: grid; grid-template-columns: 40px 1fr; gap: 4px; align-items: center; }
+        .controls-grid span { font-size: 11px; color: var(--text-muted); }
         .mini-slider { width: 100%; height: 4px; accent-color: var(--primary); }
 
         /* --- SECTION 1: THE BEAT --- */
         .drum-grid { 
             display: grid; grid-template-columns: repeat(16, 1fr); width: 100%; gap: 2px;
-            min-width: 640px; /* Prevents disappearing boxes */
+            height: 100%;
         }
         
         .step { 
-            height: 40px; background: #21262d; border-radius: 4px; cursor: pointer; transition: 0.1s; 
+            height: 40px; /* Explicit height guarantees boxes render */
+            background: #21262d; border-radius: 4px; cursor: pointer; transition: 0.1s; 
             border: 1px solid #161b22;
         }
         .step:nth-child(4n + 1) { background: #2a313a; border-left: 2px solid rgba(88, 166, 255, 0.4); }
@@ -82,17 +83,17 @@
         .audio-clip { 
             position: absolute; height: 80%; top: 10%; background: #1f6feb; 
             border-radius: 4px; border: 1px solid #79c0ff; overflow: hidden;
-            cursor: grab; /* Restored Drag functionality */
+            cursor: grab;
         }
         .audio-clip:active { cursor: grabbing; filter: brightness(1.2); }
 
         .recording-block { background: rgba(248,81,73,0.2); border: 1px dashed var(--danger); pointer-events: none; }
         .wave-canvas { width: 100%; height: 100%; display: block; pointer-events: none; }
 
-        .btn-group { display: flex; gap: 4px; margin-top: 4px; }
-        .btn-rec { flex: 1; background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 4px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 11px; }
+        .btn-group { display: flex; gap: 4px; }
+        .btn-rec { flex: 1; background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 5px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 11px; }
         .btn-rec.is-recording { background: var(--danger); color: white; animation: blink 1s infinite; }
-        .btn-solo { flex: 1; background: transparent; border: 1px solid var(--primary); color: var(--primary); padding: 4px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold; }
+        .btn-solo { flex: 1; background: transparent; border: 1px solid var(--primary); color: var(--primary); padding: 5px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold; }
         .btn-solo:hover { background: rgba(88, 166, 255, 0.2); }
         
         @keyframes blink { 50% { opacity: 0.6; } }
@@ -143,7 +144,8 @@
             let audioCtx, masterGain, mixDest, noiseBuffer;
             const STEPS = 16;
             let tempo = 120;
-            let isPlaying = false, isRecording = false;
+            let isPlaying = false, isRecording = false, isSoloing = false;
+            let activeSoloTrack = null;
             
             // Clocks
             let currentDrumStep = 0;
@@ -155,7 +157,7 @@
             // Dynamic UI Scaling
             let projectDisplayDuration = 0; 
             
-            // --- RESTORED DATA STRUCTURES ---
+            // --- RESTORED DATA STRUCTURES (Pitch parameter back in) ---
             const drumData = [
                 { id: 'hihat', name: 'Hi-Hat', pitch: 1.0, pattern: [true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false] },
                 { id: 'snare', name: 'Snare', pitch: 1.0, pattern: [false, false, false, false, true, false, false, false, false, false, false, false, true, false, false, false] },
@@ -182,10 +184,10 @@
                 drumData.forEach((drum, index) => {
                     const row = document.createElement('div'); row.className = 'track-row';
                     
-                    // Restored Drum Pitch Control
+                    // Explicitly restored Drum Pitch Sliders
                     row.innerHTML = `
                         <div class="track-header">
-                            <span style="font-weight:bold; font-size:13px;">${drum.name}</span>
+                            <span style="font-weight:bold; font-size:14px; color:white;">${drum.name}</span>
                             <div class="controls-grid">
                                 <span>Pitch</span>
                                 <input type="range" class="mini-slider" min="0.5" max="2" step="0.1" value="${drum.pitch}" oninput="updateDrumPitch('${drum.id}', this.value)">
@@ -212,10 +214,10 @@
                 vocalTracks.forEach((track, index) => {
                     const row = document.createElement('div'); row.className = 'track-row';
                     
-                    // Restored Volume, Pitch, and Echo Controls for Vocals
+                    // Restored full Voice controls + explicit Solo button
                     row.innerHTML = `
                         <div class="track-header">
-                            <span style="font-weight:bold; font-size:13px; color:white;">Track ${index + 1}</span>
+                            <span style="font-weight:bold; font-size:14px; color:white;">Track ${index + 1}</span>
                             <div class="btn-group">
                                 <button class="btn-rec" onclick="toggleRecord('${track.id}')" id="rec-btn-${track.id}">🔴 Rec</button>
                                 <button class="btn-solo" onclick="playSolo('${track.id}')">▶ Solo</button>
@@ -245,6 +247,7 @@
                     masterGain = audioCtx.createGain(); masterGain.connect(audioCtx.destination);
                     mixDest = audioCtx.createMediaStreamDestination(); masterGain.connect(mixDest);
                     
+                    // Restored Noise Buffer for high-quality Snare/Hihat
                     noiseBuffer = audioCtx.createBuffer(1, audioCtx.sampleRate * 2, audioCtx.sampleRate);
                     const output = noiseBuffer.getChannelData(0);
                     for (let i = 0; i < output.length; i++) output[i] = Math.random() * 2 - 1;
@@ -284,7 +287,16 @@
                 updateTrackFX(track);
             };
 
+            // RESTORED 700-Line Original Synthesis (Fixes the "Garbage High Pitch")
             function playDrumSound(type, pitch, time, context = audioCtx, destination = masterGain) {
+                // Ensure offline renders build their own noise buffer if needed
+                let currentNoiseBuffer = noiseBuffer;
+                if (context !== audioCtx) {
+                    currentNoiseBuffer = context.createBuffer(1, context.sampleRate * 2, context.sampleRate);
+                    const out = currentNoiseBuffer.getChannelData(0);
+                    for (let i = 0; i < out.length; i++) out[i] = Math.random() * 2 - 1;
+                }
+
                 if (type === 'kick') {
                     const osc = context.createOscillator(), gain = context.createGain();
                     osc.connect(gain).connect(destination);
@@ -292,19 +304,20 @@
                     gain.gain.setValueAtTime(1, time); gain.gain.exponentialRampToValueAtTime(0.001, time + 0.5);
                     osc.start(time); osc.stop(time + 0.5);
                 } else if (type === 'snare') {
+                    const noise = context.createBufferSource(), filter = context.createBiquadFilter(), gain = context.createGain();
+                    noise.buffer = currentNoiseBuffer; filter.type = 'highpass'; filter.frequency.value = 1000 * pitch;
+                    gain.gain.setValueAtTime(1, time); gain.gain.exponentialRampToValueAtTime(0.01, time + 0.2);
+                    noise.connect(filter).connect(gain).connect(destination); noise.start(time); noise.stop(time + 0.2);
+                    
                     const osc = context.createOscillator(), oGain = context.createGain();
                     osc.type = 'triangle'; osc.connect(oGain).connect(destination);
-                    osc.frequency.setValueAtTime(250 * pitch, time); oGain.gain.setValueAtTime(0.7, time); oGain.gain.exponentialRampToValueAtTime(0.01, time + 0.1);
+                    osc.frequency.setValueAtTime(250 * pitch, time); oGain.gain.setValueAtTime(0.7, time);
+                    oGain.gain.exponentialRampToValueAtTime(0.01, time + 0.1);
                     osc.start(time); osc.stop(time + 0.2);
-                    
-                    const noise = context.createBufferSource(), filter = context.createBiquadFilter(), gain2 = context.createGain();
-                    noise.buffer = noiseBuffer; filter.type = 'highpass'; filter.frequency.value = 1000 * pitch;
-                    gain2.gain.setValueAtTime(0.5, time); gain2.gain.exponentialRampToValueAtTime(0.01, time + 0.2);
-                    noise.connect(filter).connect(gain2).connect(destination); noise.start(time); noise.stop(time + 0.2);
                 } else if (type === 'hihat') {
                     const noise = context.createBufferSource(), filter = context.createBiquadFilter(), gain = context.createGain();
-                    noise.buffer = noiseBuffer; filter.type = 'highpass'; filter.frequency.value = 7000 * pitch;
-                    gain.gain.setValueAtTime(0.3, time); gain.gain.exponentialRampToValueAtTime(0.01, time + 0.05);
+                    noise.buffer = currentNoiseBuffer; filter.type = 'highpass'; filter.frequency.value = 7000 * pitch;
+                    gain.gain.setValueAtTime(0.5, time); gain.gain.exponentialRampToValueAtTime(0.01, time + 0.05);
                     noise.connect(filter).connect(gain).connect(destination); noise.start(time); noise.stop(time + 0.05);
                 }
             }
@@ -313,7 +326,10 @@
                 if (!isPlaying) return;
                 
                 while (nextDrumTime < audioCtx.currentTime + 0.1) {
-                    drumData.forEach(d => { if (d.pattern[currentDrumStep]) playDrumSound(d.id, d.pitch, nextDrumTime); });
+                    // Only play drums if we are NOT soloing a voice track
+                    if (!isSoloing) {
+                        drumData.forEach(d => { if (d.pattern[currentDrumStep]) playDrumSound(d.id, d.pitch, nextDrumTime); });
+                    }
                     nextDrumTime += (60.0 / tempo) * 0.25;
                     currentDrumStep++;
                     
@@ -325,28 +341,36 @@
                 timerID = window.setTimeout(scheduler, 25.0);
             }
 
-            // --- ISOLATED SOLO PLAYBACK ---
+            // --- ISOLATED SOLO PLAYBACK (Fully synced to playhead) ---
             window.playSolo = (trackId) => {
                 initAudio();
-                isPlaying = false;
-                window.clearTimeout(timerID);
-                document.getElementById('masterPlayBtn').innerText = "▶ Play Full Sequence"; 
-                document.getElementById('masterPlayBtn').classList.remove('playing');
-                document.getElementById('playhead-beat').style.display = 'none';
-                
+                window.clearTimeout(timerID); 
                 vocalClips.forEach(c => { if(c.sourceNode) { try{c.sourceNode.stop();}catch(e){} } });
+                
+                isPlaying = true;
+                isSoloing = true; // This mutes the drums in the scheduler loop
+                activeSoloTrack = trackId;
+                
+                currentDrumStep = 0;
+                globalStartTime = audioCtx.currentTime + 0.05;
+                drumLoopStartOffset = globalStartTime;
+                nextDrumTime = globalStartTime;
 
-                const targetClips = vocalClips.filter(c => c.trackId === trackId);
-                const trackSettings = vocalTracks.find(t => t.id === trackId);
-
-                targetClips.forEach(c => {
-                    const source = audioCtx.createBufferSource();
-                    source.buffer = c.buffer;
-                    source.playbackRate.value = trackSettings.pitch; // Apply Pitch FX
-                    source.connect(trackSettings.gainNode);          // Apply Vol/Echo FX
-                    source.start(0); 
-                    c.sourceNode = source;
+                vocalClips.forEach(c => {
+                    if (c.trackId === trackId) {
+                        const trackSettings = vocalTracks.find(t => t.id === c.trackId);
+                        const source = audioCtx.createBufferSource();
+                        source.buffer = c.buffer;
+                        source.playbackRate.value = trackSettings.pitch;
+                        source.connect(trackSettings.gainNode);
+                        source.start(globalStartTime + c.startTime);
+                        c.sourceNode = source;
+                    }
                 });
+
+                scheduler();
+                document.getElementById('masterPlayBtn').innerText = "⏸ Stop Solo"; 
+                document.getElementById('masterPlayBtn').classList.add('playing');
             };
 
             // --- REAL-TIME VISUALS & SCALING ---
@@ -368,7 +392,12 @@
                     
                     const beatPct = (currentDrumOffset / getLoopDuration()) * 100;
                     const bPh = document.getElementById('playhead-beat');
-                    if (bPh) { bPh.style.display = 'block'; bPh.style.left = `${beatPct}%`; }
+                    
+                    // Hide drum playhead if soloing
+                    if (bPh) { 
+                        bPh.style.display = isSoloing ? 'none' : 'block'; 
+                        bPh.style.left = `${beatPct}%`; 
+                    }
 
                     const vocalPct = (currentAbsTime / projectDisplayDuration) * 100;
                     document.querySelectorAll('.playhead-vocal').forEach(ph => {
@@ -441,6 +470,8 @@
                         renderStaticClips();
                     };
 
+                    // Auto-start full playback to guide recording
+                    isSoloing = false; 
                     if(!isPlaying) document.getElementById('masterPlayBtn').click();
                     
                     setTimeout(() => {
@@ -479,7 +510,7 @@
                     clipEl.style.width = `${(clip.duration / projectDisplayDuration) * 100}%`;
                     clipEl.innerHTML = `<canvas class="wave-canvas" width="400" height="80"></canvas>`;
                     
-                    // Add Drag and Split Listeners Restored Here
+                    // Drag and Split Event Listeners Restored
                     clipEl.addEventListener('mousedown', handleClipDrag);
                     clipEl.addEventListener('dblclick', (e) => handleClipSplit(e, clip));
 
@@ -518,7 +549,7 @@
                         const timeMove = (pixelMove / trackRect.width) * projectDisplayDuration;
                         
                         let newTime = startClipTime + timeMove;
-                        newTime = Math.max(0, newTime); // Prevent dragging before 0
+                        newTime = Math.max(0, newTime); 
                         
                         clip.trackId = targetTrackId;
                         clip.startTime = newTime;
@@ -530,8 +561,6 @@
                 
                 const onMouseUp = (upEvent) => {
                     window.removeEventListener('mousemove', onMouseMove); window.removeEventListener('mouseup', onMouseUp);
-                    const r = vocalContainer.getBoundingClientRect();
-                    if (upEvent.clientY < r.top - 50 || upEvent.clientY > r.bottom + 50) vocalClips = vocalClips.filter(c => c.id !== clip.id);
                     renderStaticClips();
                 };
                 window.addEventListener('mousemove', onMouseMove); window.addEventListener('mouseup', onMouseUp);
@@ -564,7 +593,9 @@
             // --- PLAYBACK CONTROLS ---
             document.getElementById('masterPlayBtn').addEventListener('click', (e) => {
                 initAudio(); isPlaying = !isPlaying;
+                
                 if(isPlaying) {
+                    isSoloing = false;
                     currentDrumStep = 0;
                     globalStartTime = audioCtx.currentTime + 0.05;
                     drumLoopStartOffset = globalStartTime;
@@ -610,7 +641,6 @@
 
                 const offlineCtx = new OfflineAudioContext(1, audioCtx.sampleRate * maxDuration, audioCtx.sampleRate);
                 
-                // Reconstruct Routing for Offline Mix
                 const offlineMaster = offlineCtx.createGain(); offlineMaster.connect(offlineCtx.destination);
                 const offlineVocalTracks = vocalTracks.map(t => {
                     const g = offlineCtx.createGain(); const d = offlineCtx.createDelay(5.0); const fb = offlineCtx.createGain();
