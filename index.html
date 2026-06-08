@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BeatBox - Demo Creator</title>
     <style>
+        /* --- MINIMALIST THEME --- */
         :root {
             --bg: #0d1117;
             --surface: #161b22;
@@ -44,12 +45,29 @@
         .play-btn.playing { background: var(--danger); }
         .bpm-control { display: flex; align-items: center; gap: 10px; font-weight: bold; }
 
-        /* --- SECTION 1: THE BEAT --- */
-        .beat-row { display: flex; align-items: center; margin-bottom: 8px; height: 40px; }
-        .beat-label { width: 100px; font-weight: bold; font-size: 13px; color: var(--text-main); }
-        .beat-steps { flex: 1; display: flex; gap: 4px; background: #090c10; padding: 4px; border-radius: 6px; position: relative; border: 1px solid var(--border);}
+        /* --- SECTION 1: THE BEAT (Hardcoded Grid to prevent collapsing) --- */
+        .beat-row { display: flex; align-items: center; margin-bottom: 8px; height: 50px; }
+        .beat-label { width: 100px; font-weight: bold; font-size: 13px; color: var(--text-main); flex-shrink: 0;}
         
-        .step { flex: 1; background: #21262d; border-radius: 4px; cursor: pointer; transition: 0.1s; }
+        .beat-steps { 
+            flex: 1; 
+            display: grid; 
+            grid-template-columns: repeat(16, 1fr); 
+            gap: 4px; 
+            background: #090c10; 
+            padding: 4px; 
+            border-radius: 6px; 
+            position: relative; 
+            border: 1px solid var(--border);
+        }
+        
+        .step { 
+            background: #21262d; 
+            border-radius: 4px; 
+            height: 38px; /* Explicit height ensures it NEVER disappears */
+            cursor: pointer; 
+            transition: background-color 0.1s; 
+        }
         .step:nth-child(4n + 1) { background: #2a313a; border-left: 2px solid rgba(255,255,255,0.1); }
         
         .step.active[data-drum="kick"] { background: #ff7b72; box-shadow: 0 0 8px rgba(255,123,114,0.4); }
@@ -59,8 +77,8 @@
         .playhead-beat { position: absolute; top: 0; bottom: 0; width: 2px; background: white; pointer-events: none; display: none; z-index: 10; box-shadow: 0 0 10px white; }
 
         /* --- SECTION 2: THE VOICE --- */
-        .vocal-row { display: flex; align-items: center; margin-bottom: 12px; height: 80px; }
-        .vocal-controls { width: 100px; display: flex; flex-direction: column; gap: 6px; padding-right: 15px; }
+        .vocal-row { display: flex; align-items: center; margin-bottom: 12px; height: 90px; }
+        .vocal-controls { width: 100px; display: flex; flex-direction: column; gap: 6px; padding-right: 15px; flex-shrink: 0;}
         
         .vocal-timeline { 
             flex: 1; height: 100%; background: #090c10; border: 1px solid var(--border); 
@@ -75,10 +93,13 @@
         .recording-block { background: rgba(248,81,73,0.2); border: 1px dashed var(--danger); }
         .wave-canvas { width: 100%; height: 100%; display: block; }
 
+        /* Vocal Track Buttons */
         .btn-rec { background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 5px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 11px; }
         .btn-rec.is-recording { background: var(--danger); color: white; animation: blink 1s infinite; }
+        .btn-solo { background: transparent; border: 1px solid var(--primary); color: var(--primary); padding: 5px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold; }
         .btn-del { background: transparent; border: 1px solid var(--text-muted); color: var(--text-muted); padding: 5px; border-radius: 4px; cursor: pointer; font-size: 11px; }
         
+        .btn-solo:hover { background: rgba(88, 166, 255, 0.2); }
         @keyframes blink { 50% { opacity: 0.6; } }
         
         .playhead-vocal { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--danger); pointer-events: none; display: none; z-index: 10; box-shadow: 0 0 10px var(--danger); }
@@ -97,7 +118,7 @@
         </header>
 
         <div class="top-controls">
-            <button id="masterPlayBtn" class="play-btn">▶ Play Sequence</button>
+            <button id="masterPlayBtn" class="play-btn">▶ Play Full Sequence</button>
             <div class="bpm-control">
                 <label>BPM: <span id="bpmVal">120</span></label>
                 <input type="range" id="bpmSlider" min="70" max="180" value="120">
@@ -107,13 +128,13 @@
 
         <div class="panel">
             <h2 class="section-title">1. Guide Beat</h2>
-            <div class="instructions">Click boxes to make a drum pattern. This will loop endlessly underneath your voice.</div>
+            <div class="instructions">Click the boxes below to make a drum pattern. This repeats endlessly to guide your recording.</div>
             <div id="beat-container"></div>
         </div>
 
         <div class="panel">
             <h2 class="section-title">2. Free-Form Voice Recorder</h2>
-            <div class="instructions">Put on headphones. Hit <b>🔴 Record</b> to start the beat and record freely. Your recording can be as long as you want. The interface will automatically zoom out to fit your longest take.</div>
+            <div class="instructions">Put on headphones. Hit <b>🔴 Record</b> to start the beat and record freely. Your recording can be as long as you want. Use <b>▶ Play Solo</b> to hear your voice without the drums.</div>
             <div id="vocal-container"></div>
         </div>
     </div>
@@ -130,8 +151,8 @@
             // Clocks
             let currentDrumStep = 0;
             let nextDrumTime = 0.0;
-            let drumLoopStartOffset = 0.0; // Tracks the start of the current 1-bar loop
-            let globalStartTime = 0.0;     // Tracks the absolute start of the playback session
+            let drumLoopStartOffset = 0.0; 
+            let globalStartTime = 0.0;     
             let timerID;
             
             // Dynamic UI Scaling (defaults to 4 bars, expands if you record longer)
@@ -174,10 +195,12 @@
                 for(let i=1; i<=2; i++) {
                     const trackId = `vox-${i}`;
                     const row = document.createElement('div'); row.className = 'vocal-row';
+                    // The Solo button is hardcoded back into the interface here
                     row.innerHTML = `
                         <div class="vocal-controls">
                             <span style="font-weight:bold; font-size:13px; color:white;">Track ${i}</span>
                             <button class="btn-rec" onclick="toggleRecord('${trackId}')" id="rec-btn-${trackId}">🔴 Record</button>
+                            <button class="btn-solo" onclick="playSolo('${trackId}')">▶ Play Solo</button>
                             <button class="btn-del" onclick="clearTrack('${trackId}')">🗑️ Clear</button>
                         </div>
                         <div class="vocal-timeline" id="timeline-${trackId}">
@@ -199,7 +222,6 @@
                 if (audioCtx.state === 'suspended') audioCtx.resume();
             }
 
-            // Extracted drum synthesis so it can be used for real-time AND offline downloading
             function playDrumSound(type, time, context = audioCtx, destination = audioCtx.destination) {
                 if (type === 'kick') {
                     const osc = context.createOscillator(), gain = context.createGain();
@@ -213,7 +235,6 @@
                     osc.frequency.setValueAtTime(250, time); oGain.gain.setValueAtTime(0.7, time); oGain.gain.exponentialRampToValueAtTime(0.01, time + 0.1);
                     osc.start(time); osc.stop(time + 0.2);
                     
-                    // Simple noise approximation for snare snap
                     const osc2 = context.createOscillator(); osc2.type = 'square';
                     const gain2 = context.createGain(); osc2.connect(gain2).connect(destination);
                     osc2.frequency.setValueAtTime(800, time); gain2.gain.setValueAtTime(0.3, time); gain2.gain.exponentialRampToValueAtTime(0.01, time + 0.1);
@@ -229,7 +250,6 @@
             function scheduler() {
                 if (!isPlaying) return;
                 
-                // Schedule drums slightly ahead of time
                 while (nextDrumTime < audioCtx.currentTime + 0.1) {
                     drumData.forEach(d => { if (d.pattern[currentDrumStep]) playDrumSound(d.id, nextDrumTime); });
                     nextDrumTime += (60.0 / tempo) * 0.25;
@@ -243,12 +263,40 @@
                 timerID = window.setTimeout(scheduler, 25.0);
             }
 
+            // --- ISOLATED SOLO PLAYBACK ---
+            window.playSolo = (trackId) => {
+                initAudio();
+                
+                // 1. Stop everything else that might be playing (drums or master playback)
+                isPlaying = false;
+                window.clearTimeout(timerID);
+                document.getElementById('masterPlayBtn').innerText = "▶ Play Full Sequence"; 
+                document.getElementById('masterPlayBtn').classList.remove('playing');
+                document.getElementById('playhead-beat').style.display = 'none';
+                
+                // Stop previous audio buffers
+                vocalClips.forEach(c => { if(c.source) { try{c.source.stop();}catch(e){} } });
+
+                // 2. Filter clips to ONLY the requested track
+                const targetClips = vocalClips.filter(c => c.trackId === trackId);
+                if (targetClips.length === 0) {
+                    alert("No audio recorded on this track yet.");
+                    return;
+                }
+
+                // 3. Play them directly
+                targetClips.forEach(c => {
+                    c.source = audioCtx.createBufferSource();
+                    c.source.buffer = c.buffer;
+                    c.source.connect(audioCtx.destination);
+                    c.source.start(0); // Plays immediately without syncing to drums
+                });
+            };
+
             // --- REAL-TIME VISUALS & SCALING ---
             function updateVisuals() {
                 if (!audioCtx) return;
                 
-                // 1. Calculate the dynamic width of the Voice Timeline
-                // Defaults to 4 Bars. Expands if recordings are longer.
                 let maxRequiredDuration = getLoopDuration() * 4; 
                 vocalClips.forEach(c => { if (c.startTime + c.duration > maxRequiredDuration) maxRequiredDuration = c.startTime + c.duration; });
                 
@@ -262,18 +310,15 @@
                     const currentAbsTime = audioCtx.currentTime - globalStartTime;
                     const currentDrumOffset = audioCtx.currentTime - drumLoopStartOffset;
                     
-                    // Beat Playhead (Loops 0 to 100% inside 1 bar)
                     const beatPct = (currentDrumOffset / getLoopDuration()) * 100;
                     const bPh = document.getElementById('playhead-beat');
                     if (bPh) { bPh.style.display = 'block'; bPh.style.left = `${beatPct}%`; }
 
-                    // Voice Playheads (Moves continuously across the dynamically scaled timeline)
                     const vocalPct = (currentAbsTime / projectDisplayDuration) * 100;
                     document.querySelectorAll('.playhead-vocal').forEach(ph => {
                         ph.style.display = 'block'; ph.style.left = `${vocalPct}%`;
                     });
 
-                    // Live Recording Block Generation
                     if (isRecording && activeRecordingBlock) {
                         const recElapsed = audioCtx.currentTime - recordingStartTime;
                         const startPct = (recordingStartTime - globalStartTime) / projectDisplayDuration * 100;
@@ -282,7 +327,7 @@
                         activeRecordingBlock.style.left = `${startPct}%`;
                         activeRecordingBlock.style.width = `${widthPct}%`;
                         drawOscilloscope();
-                        renderStaticClips(); // Re-render static clips to match new scale
+                        renderStaticClips(); 
                     }
                 }
                 requestAnimationFrame(updateVisuals);
@@ -321,7 +366,7 @@
                     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                     const micSource = audioCtx.createMediaStreamSource(stream);
                     liveAnalyser = audioCtx.createAnalyser(); liveAnalyser.fftSize = 512;
-                    micSource.connect(liveAnalyser); // Do NOT connect to destination (no feedback loop)
+                    micSource.connect(liveAnalyser); 
                     liveDataArray = new Uint8Array(liveAnalyser.frequencyBinCount);
 
                     mediaRec = new MediaRecorder(stream); audioChunks = [];
@@ -331,7 +376,6 @@
                         const arrayBuffer = await (new Blob(audioChunks)).arrayBuffer();
                         const audioBuf = await audioCtx.decodeAudioData(arrayBuffer);
                         
-                        // Save the clip with absolute time values, NOT tied to the drum loop
                         vocalClips.push({ 
                             id: `clip-${Date.now()}`, buffer: audioBuf, trackId: trackId, 
                             startTime: recordingStartTime - globalStartTime, 
@@ -341,7 +385,6 @@
                         renderStaticClips();
                     };
 
-                    // Auto-start playback to guide the user
                     if(!isPlaying) document.getElementById('masterPlayBtn').click();
                     
                     setTimeout(() => {
@@ -363,10 +406,8 @@
             };
 
             function renderStaticClips() {
-                // Remove old static clips
                 document.querySelectorAll('.audio-clip:not(.recording-block)').forEach(el => el.remove());
                 
-                // Recalculate duration scale in case a long recording stretched it
                 let maxDur = getLoopDuration() * 4;
                 vocalClips.forEach(c => { if(c.startTime + c.duration > maxDur) maxDur = c.startTime + c.duration; });
                 projectDisplayDuration = maxDur;
@@ -377,12 +418,10 @@
                     
                     const clipEl = document.createElement('div');
                     clipEl.className = 'audio-clip'; 
-                    // Dynamic scaling based on absolute time vs total project display time
                     clipEl.style.left = `${(clip.startTime / projectDisplayDuration) * 100}%`; 
                     clipEl.style.width = `${(clip.duration / projectDisplayDuration) * 100}%`;
                     clipEl.innerHTML = `<canvas class="wave-canvas" width="400" height="80"></canvas>`;
                     
-                    // Draw static waveform
                     const ctx = clipEl.querySelector('canvas').getContext('2d');
                     const data = clip.buffer.getChannelData(0);
                     ctx.fillStyle = 'rgba(255,255,255,0.8)';
@@ -409,7 +448,6 @@
                     drumLoopStartOffset = globalStartTime;
                     nextDrumTime = globalStartTime;
                     
-                    // Play all recorded vocal clips at their absolute starting times
                     vocalClips.forEach(c => {
                         c.source = audioCtx.createBufferSource();
                         c.source.buffer = c.buffer;
@@ -422,7 +460,7 @@
                 } else {
                     window.clearTimeout(timerID); 
                     vocalClips.forEach(c => { if(c.source) { try{c.source.stop();}catch(e){} } });
-                    e.target.innerText = "▶ Play Sequence"; e.target.classList.remove('playing');
+                    e.target.innerText = "▶ Play Full Sequence"; e.target.classList.remove('playing');
                     document.getElementById('playhead-beat').style.display = 'none';
                     document.querySelectorAll('.playhead-vocal').forEach(ph => ph.style.display = 'none');
                     if (isRecording && activeRecTrack) window.toggleRecord(activeRecTrack);
@@ -431,25 +469,22 @@
 
             document.getElementById('bpmSlider').addEventListener('input', (e) => {
                 tempo = e.target.value; document.getElementById('bpmVal').innerText = tempo;
-                if(!isPlaying) renderStaticClips(); // Re-scale if needed
+                if(!isPlaying) renderStaticClips(); 
             });
 
-            // --- PRO STUDIO EXPORT (BEATS REPEATING TO MATCH VOICE) ---
+            // --- PRO STUDIO EXPORT ---
             document.getElementById('downloadBtn').addEventListener('click', async (e) => {
                 initAudio();
                 const btn = e.target;
                 const originalText = btn.innerText;
                 btn.innerText = "⏳ Bouncing Mix..."; btn.disabled = true;
 
-                // 1. Calculate how long the downloaded song needs to be
-                let maxDuration = getLoopDuration(); // Minimum 1 bar
+                let maxDuration = getLoopDuration(); 
                 vocalClips.forEach(c => { if (c.startTime + c.duration > maxDuration) maxDuration = c.startTime + c.duration; });
-                maxDuration += 0.5; // Add half second tail
+                maxDuration += 0.5; 
 
-                // 2. Create Offline Audio Context to process audio instantly without having to wait
                 const offlineCtx = new OfflineAudioContext(1, audioCtx.sampleRate * maxDuration, audioCtx.sampleRate);
                 
-                // 3. Render Drums repeatedly until the end of the voice clip
                 let renderTime = 0.0;
                 let step = 0;
                 while (renderTime < maxDuration) {
@@ -460,7 +495,6 @@
                     step++;
                 }
 
-                // 4. Render Voice clips at their exact recorded times
                 vocalClips.forEach(c => {
                     const source = offlineCtx.createBufferSource();
                     source.buffer = c.buffer;
@@ -468,7 +502,6 @@
                     source.start(c.startTime);
                 });
 
-                // 5. Render Mix and Convert to .WAV
                 const renderedBuffer = await offlineCtx.startRendering();
                 const wavBlob = audioBufferToWav(renderedBuffer);
                 
@@ -483,7 +516,6 @@
                 btn.innerText = originalText; btn.disabled = false;
             });
 
-            // Standard conversion from AudioBuffer to WAV format
             function audioBufferToWav(buffer) {
                 const numOfChan = buffer.numberOfChannels, length = buffer.length * numOfChan * 2 + 44;
                 const out = new ArrayBuffer(length), view = new DataView(out);
