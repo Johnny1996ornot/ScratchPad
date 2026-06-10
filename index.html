@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BeatBox - Pro Demo Creator V2</title>
+    <title>BeatBox - Pro Demo Creator V3</title>
     <style>
         /* --- CORE STYLING & DAW THEME --- */
         :root {
@@ -21,22 +21,28 @@
             user-select: none; overflow-x: hidden;
         }
 
-        .app-container { width: 100%; max-width: 1200px; display: flex; flex-direction: column; gap: 20px; }
+        .app-container { width: 100%; max-width: 1300px; display: flex; flex-direction: column; gap: 20px; }
 
         /* --- HEADER & MASTER CONTROLS --- */
         header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 15px; border-bottom: 1px solid var(--border); }
         .logo h1 { margin: 0; font-size: 26px; font-weight: 900; letter-spacing: 2px; }
         .logo span { color: var(--primary); font-size: 13px; text-transform: uppercase; letter-spacing: 1px; }
         
+        .kofi-btn {
+            background: #FFDD00; color: #000; text-decoration: none; padding: 8px 16px;
+            border-radius: 20px; font-weight: bold; font-size: 14px; display: flex; align-items: center; gap: 8px;
+        }
+        .kofi-btn:hover { opacity: 0.9; }
+        
         .top-controls { display: flex; justify-content: space-between; align-items: center; background: var(--surface); padding: 15px 20px; border-radius: 12px; border: 1px solid var(--border); }
-        .btn-master { color: white; border: none; padding: 12px 20px; font-size: 15px; font-weight: bold; border-radius: 8px; cursor: pointer; transition: 0.1s; }
+        .btn-master { color: white; border: none; padding: 12px 20px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; transition: 0.1s; }
         .btn-master:active { transform: scale(0.97); }
-        .btn-master-full { background: var(--primary); font-size: 18px;}
+        .btn-master-full { background: var(--primary); }
         .btn-master.playing { background: var(--danger); }
         .btn-download { background: var(--accent); }
 
         .toolbar-group { display: flex; align-items: center; gap: 15px; font-weight: bold; font-size: 14px; }
-        .slider-control { display: flex; flex-direction: column; gap: 4px; }
+        .slider-control { display: flex; align-items: center; gap: 10px; }
         .slider-control input { width: 120px; accent-color: var(--primary); }
 
         /* --- PANELS & SECTION HEADERS --- */
@@ -45,22 +51,20 @@
         .section-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 15px; }
         .section-title { margin: 0; font-size: 16px; color: #fff; text-transform: uppercase; letter-spacing: 1px; }
         
-        .btn-beat { background: #8957e5; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .btn-beat { background: #8957e5; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px;}
         .btn-beat.playing { background: var(--danger); }
 
         .instructions { font-size: 13px; color: var(--text-muted); margin-bottom: 15px; line-height: 1.5; background: #090c10; padding: 10px; border-radius: 6px; border: 1px solid var(--border); }
 
         /* --- TRACK LAYOUTS --- */
         .track-row { display: flex; align-items: stretch; margin-bottom: 12px; border: 1px solid var(--border); border-radius: 8px; background: #090c10; }
-        .track-header { width: 260px; padding: 15px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; justify-content: center; gap: 10px; flex-shrink: 0; border-radius: 8px 0 0 8px; }
+        .track-header { width: 280px; padding: 15px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; justify-content: center; gap: 10px; flex-shrink: 0; border-radius: 8px 0 0 8px; }
         
-        /* The Viewport handles horizontal scrolling */
         .track-viewport { flex: 1; overflow-x: auto; overflow-y: hidden; position: relative; display: flex; align-items: center; padding: 8px 0; background: #0d1117;}
-        /* The Inner Content scales infinitely in pixels */
         .track-inner { position: relative; height: 100%; min-width: 100%; }
 
         /* --- TRACK CONTROLS --- */
-        .controls-grid { display: grid; grid-template-columns: 40px 1fr; gap: 8px; align-items: center; }
+        .controls-grid { display: grid; grid-template-columns: 45px 1fr; gap: 8px; align-items: center; }
         .controls-grid span { font-size: 11px; color: var(--text-muted); font-weight: 600; }
         .mini-slider { width: 100%; height: 4px; accent-color: var(--primary); cursor: pointer; }
 
@@ -71,26 +75,30 @@
         .btn-rec-append { border-color: var(--warning); color: var(--warning); }
         .btn-solo { border-color: var(--primary); color: var(--primary); }
         
-        .btn-rec-overwrite.is-recording { background: var(--danger); color: white; animation: pulse 1s infinite; }
+        .btn-rec-overwrite.is-recording, .btn-rec-append.is-recording { background: var(--danger); color: white; border-color: var(--danger); animation: pulse 1s infinite; }
         .btn-rec-append.is-waiting { background: var(--warning); color: #000; animation: pulse 1s infinite; }
-        .btn-rec-append.is-recording { background: var(--danger); border-color: var(--danger); color: white; animation: pulse 1s infinite; }
 
         @keyframes pulse { 50% { opacity: 0.6; } }
 
-        /* --- DRUM SEQUENCER --- */
-        .drum-grid { display: grid; grid-template-columns: repeat(16, 1fr); gap: 4px; height: 44px; width: 100%; }
+        /* --- DRUM SEQUENCER (32 STEPS) --- */
+        .drum-inner { min-width: 900px; /* Prevents squishing */ }
+        .drum-grid { display: grid; grid-template-columns: repeat(32, 1fr); gap: 3px; height: 44px; width: 100%; }
         .step { background: #21262d; border-radius: 4px; cursor: pointer; transition: 0.1s; border: 1px solid #161b22; }
-        .step:nth-child(4n + 1) { background: #2a313a; border-left: 2px solid rgba(88, 166, 255, 0.4); }
+        
+        /* Highlight Downbeats (Quarter Notes) */
+        .step:nth-child(4n + 1) { background: #2a313a; border-left: 2px solid rgba(88, 166, 255, 0.3); }
+        /* Highlight the Start of Bar 2 */
+        .step:nth-child(16n + 1) { border-left: 3px solid rgba(255, 255, 255, 0.5); }
         
         .step.active[data-drum="kick"] { background: var(--drum-kick); box-shadow: 0 0 10px rgba(255,123,114,0.3); }
         .step.active[data-drum="snare"] { background: var(--drum-snare); box-shadow: 0 0 10px rgba(210,168,255,0.3); }
         .step.active[data-drum="hihat"] { background: var(--drum-hihat); box-shadow: 0 0 10px rgba(126,231,135,0.3); }
 
-        /* --- VOCAL TIMELINE (DAW STYLE) --- */
+        /* --- VOCAL TIMELINE --- */
         .vocal-timeline-inner { height: 90px; position: relative; background: #090c10; }
         
-        /* Dynamic Grid Background Canvas */
-        .grid-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; opacity: 0.3; }
+        /* Grid Canvas moved to higher z-index so it draws OVER audio */
+        .grid-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 15; opacity: 0.4; }
 
         .audio-clip {
             position: absolute; height: 80%; top: 10%; background: #1f6feb; border-radius: 6px;
@@ -100,12 +108,11 @@
         .audio-clip.selected { border-color: var(--selected); background: #3b74c4; box-shadow: 0 0 15px rgba(227, 179, 65, 0.6); }
         .audio-clip:active { cursor: grabbing; }
 
-        .recording-block { background: rgba(248,81,73,0.25); border: 2px dashed var(--danger); pointer-events: none; }
+        .recording-block { background: rgba(248,81,73,0.25); border: 2px dashed var(--danger); pointer-events: none; z-index: 4; }
         .wave-canvas { width: 100%; height: 100%; display: block; pointer-events: none; }
 
         /* --- PLAYHEADS --- */
-        .playhead-beat { position: absolute; top: 0; bottom: 0; width: 3px; background: #ffffff; pointer-events: none; display: none; z-index: 10; box-shadow: 0 0 10px rgba(255,255,255,0.8); }
-        /* Absolute Vocal Playhead spans the inner timeline */
+        .playhead-beat { position: absolute; top: -5px; bottom: -5px; width: 3px; background: #ffffff; pointer-events: none; display: none; z-index: 20; box-shadow: 0 0 10px rgba(255,255,255,0.8); border-radius: 2px;}
         .playhead-vocal { position: absolute; top: 0; height: 100%; width: 2px; background: var(--danger); pointer-events: none; display: none; z-index: 20; box-shadow: 0 0 10px var(--danger); }
 
     </style>
@@ -116,14 +123,9 @@
         <header>
             <div class="logo">
                 <h1>BEATBOX</h1>
-                <span>Pro Studio V2</span>
+                <span>Pro Studio V3</span>
             </div>
-            <div class="toolbar-group">
-                <div class="slider-control">
-                    <span>🔍 Zoom Level</span>
-                    <input type="range" id="zoomSlider" min="50" max="400" value="100">
-                </div>
-            </div>
+            <a href="https://buymeacoffee.com/" target="_blank" class="kofi-btn">☕ Buy Me a Coffee</a>
         </header>
 
         <div class="top-controls">
@@ -139,7 +141,7 @@
 
         <div class="panel">
             <div class="section-header">
-                <h2 class="section-title">1. Master Beat (Loops Endlessly)</h2>
+                <h2 class="section-title">1. Guide Beat (2 Bars - 32 Steps)</h2>
                 <button id="btnPlayBeat" class="btn-beat">🥁 Play Beat Only</button>
             </div>
             <div id="beat-container"></div>
@@ -148,9 +150,8 @@
         <div class="panel">
             <h2 class="section-title">2. Vocal Studio</h2>
             <div class="instructions">
-                <strong>Recording:</strong> Put on headphones. Use <b>🔴 Overwrite</b> to wipe a track and record from 0:00. Use <b>➕ Append</b> to listen and seamlessly resume recording where you left off.<br>
-                <strong>Editing:</strong> Scroll inside the track to pan. Hold <b>Ctrl + Scroll Wheel</b> to Zoom. <br>
-                <strong>Tools:</strong> Click a clip to select it. <b>Double-Click</b> to Split. <b>Ctrl+C</b> (Copy), <b>Ctrl+V</b> (Paste at playhead), <b>Delete</b> (Remove). Dragging no longer squishes clips.
+                <strong>Audio FX:</strong> You now have true <b>Reverb</b> (Room/Hall sound) on both Drums and Vocals, plus <b>Echo</b> (Repeating delays) exclusively for vocals.<br>
+                <strong>Workspace:</strong> Hover over the vocal track and hold <b>Ctrl + Mouse Wheel</b> to zoom in and out. Grid lines now render <i>over</i> the voice clips so you can sync up to the beat perfectly.
             </div>
             <div id="vocal-container"></div>
         </div>
@@ -162,14 +163,15 @@
             // ==========================================
             // 1. CORE SYSTEM & DAW STATE
             // ==========================================
-            let audioCtx, masterGain, mixDest, noiseBuffer;
-            const STEPS = 16;
+            let audioCtx, masterGain, mixDest;
+            let sharedReverbBuffer = null; 
+            
+            // EXPANDED TO 32 STEPS (2 Full Bars)
+            const STEPS = 32;
             let tempo = 120;
+            let PPS = 100; // Pixels-Per-Second for zooming
             
-            // Pixels-Per-Second (The core engine fix for dragging/zooming)
-            let PPS = 100; // 100 pixels represents 1 second of audio initially
-            
-            let playState = 'STOPPED'; // STOPPED, FULL, BEAT_ONLY, SOLO
+            let playState = 'STOPPED'; 
             let isRecording = false;
             let isWaitingToPunchIn = false;
             
@@ -179,24 +181,25 @@
             let globalStartTime = 0.0;     
             let timerID;
             
-            let totalProjectDuration = 30; // Minimum 30 seconds wide
-
-            // Clipboard & Selection
+            let totalProjectDuration = 30; 
             let selectedClipId = null;
             let clipboardData = null;
             
             // ==========================================
-            // 2. DATA STRUCTURES (Now with Drum Vol/Echo)
+            // 2. DATA STRUCTURES (Now with Reverb vs Echo)
             // ==========================================
             let drumTracks = [
-                { id: 'hihat', name: 'Hi-Hat', pitch: 1.0, volume: 1.0, echo: 0.0, gainNode: null, delayNode: null, pattern: [true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false] },
-                { id: 'snare', name: 'Snare', pitch: 1.0, volume: 1.0, echo: 0.0, gainNode: null, delayNode: null, pattern: [false, false, false, false, true, false, false, false, false, false, false, false, true, false, false, false] },
-                { id: 'kick', name: 'Kick', pitch: 1.0, volume: 1.0, echo: 0.0, gainNode: null, delayNode: null, pattern: [true, false, false, false, false, false, false, false, true, false, false, false, false, false, false, false] }
+                { id: 'hihat', name: 'Hi-Hat', pitch: 1.0, volume: 1.0, reverb: 0.0, inputGain: null, reverbMix: null, convolver: null, 
+                  pattern: [true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false] },
+                { id: 'snare', name: 'Snare', pitch: 1.0, volume: 1.0, reverb: 0.2, inputGain: null, reverbMix: null, convolver: null, 
+                  pattern: [false, false, false, false, true, false, false, false, false, false, false, false, true, false, false, false, false, false, false, false, true, false, false, false, false, false, false, false, true, false, false, false] },
+                { id: 'kick', name: 'Kick', pitch: 1.0, volume: 1.0, reverb: 0.0, inputGain: null, reverbMix: null, convolver: null, 
+                  pattern: [true, false, false, false, false, false, false, false, true, false, false, false, false, false, false, false, true, false, false, false, false, false, false, false, true, false, false, false, false, false, false, false] }
             ];
 
             let vocalTracks = [
-                { id: 'vox-1', volume: 1.0, pitch: 1.0, echo: 0, gainNode: null, delayNode: null },
-                { id: 'vox-2', volume: 1.0, pitch: 1.0, echo: 0, gainNode: null, delayNode: null }
+                { id: 'vox-1', volume: 1.0, pitch: 1.0, reverb: 0.0, echo: 0.0, inputGain: null, reverbMix: null, convolver: null, delayNode: null, delayMix: null, delayFeedback: null },
+                { id: 'vox-2', volume: 1.0, pitch: 1.0, reverb: 0.0, echo: 0.0, inputGain: null, reverbMix: null, convolver: null, delayNode: null, delayMix: null, delayFeedback: null }
             ];
 
             let vocalClips = [];
@@ -215,7 +218,7 @@
             function buildInterface() {
                 // Build Drums
                 beatContainer.innerHTML = '';
-                drumTracks.forEach((drum, index) => {
+                drumTracks.forEach((drum) => {
                     const row = document.createElement('div'); row.className = 'track-row';
                     
                     row.innerHTML = `
@@ -224,12 +227,12 @@
                             <div class="controls-grid">
                                 <span>Vol</span><input type="range" class="mini-slider" min="0" max="2" step="0.1" value="${drum.volume}" oninput="updateDrumFX('${drum.id}', 'vol', this.value)">
                                 <span>Pitch</span><input type="range" class="mini-slider" min="0.5" max="2" step="0.1" value="${drum.pitch}" oninput="updateDrumFX('${drum.id}', 'pitch', this.value)">
-                                <span>Echo</span><input type="range" class="mini-slider" min="0" max="1" step="0.1" value="${drum.echo}" oninput="updateDrumFX('${drum.id}', 'echo', this.value)">
+                                <span>Reverb</span><input type="range" class="mini-slider" min="0" max="1" step="0.1" value="${drum.reverb}" oninput="updateDrumFX('${drum.id}', 'reverb', this.value)">
                             </div>
                         </div>
-                        <div class="track-viewport" style="overflow: visible; background: transparent;">
-                            <div class="track-inner" style="width: 100%; display: flex; align-items: center;">
-                                ${index === 0 ? `<div id="playhead-beat" class="playhead-beat"></div>` : ''}
+                        <div class="track-viewport" style="overflow-x: auto;">
+                            <div class="track-inner drum-inner" style="display: flex; align-items: center; position: relative;">
+                                <div id="playhead-beat-${drum.id}" class="playhead-beat"></div>
                                 <div class="drum-grid"></div>
                             </div>
                         </div>
@@ -254,20 +257,25 @@
                     row.innerHTML = `
                         <div class="track-header">
                             <span style="font-weight:bold; font-size:15px; color:white;">Vocal Track ${index + 1}</span>
+                            
                             <div class="btn-group">
                                 <button class="btn-action btn-rec-overwrite" onclick="startRecording('${track.id}', false)" id="rec-btn-new-${track.id}">🔴 Overwrite</button>
                                 <button class="btn-action btn-rec-append" onclick="startRecording('${track.id}', true)" id="rec-btn-append-${track.id}">➕ Append</button>
                             </div>
+                            
                             <div class="btn-group">
                                 <button class="btn-action btn-solo" onclick="playSolo('${track.id}')">▶ Solo Audio</button>
                                 <button class="btn-action" onclick="clearTrack('${track.id}')">🗑️ Clear</button>
                             </div>
+                            
                             <div class="controls-grid" style="margin-top: 5px;">
                                 <span>Vol</span><input type="range" class="mini-slider" min="0" max="2" step="0.1" value="${track.volume}" onchange="updateVoxFX('${track.id}', 'vol', this.value)">
                                 <span>Pitch</span><input type="range" class="mini-slider" min="0.5" max="1.5" step="0.1" value="${track.pitch}" onchange="updateVoxFX('${track.id}', 'pitch', this.value)">
+                                <span>Reverb</span><input type="range" class="mini-slider" min="0" max="1" step="0.1" value="${track.reverb}" onchange="updateVoxFX('${track.id}', 'reverb', this.value)">
                                 <span>Echo</span><input type="range" class="mini-slider" min="0" max="1" step="0.1" value="${track.echo}" onchange="updateVoxFX('${track.id}', 'echo', this.value)">
                             </div>
                         </div>
+                        
                         <div class="track-viewport" id="viewport-${track.id}">
                             <div class="track-inner vocal-timeline-inner" id="timeline-${track.id}">
                                 <canvas class="grid-canvas"></canvas>
@@ -277,24 +285,35 @@
                     `;
                     vocalContainer.appendChild(row);
 
-                    // Add Wheel Zoom Listener to Viewports
+                    // Add Ctrl+Scroll Zoom Listener
                     const viewport = row.querySelector('.track-viewport');
                     viewport.addEventListener('wheel', (e) => {
                         if (e.ctrlKey) {
                             e.preventDefault();
                             let delta = e.deltaY > 0 ? -10 : 10;
-                            let newPPS = PPS + delta;
-                            document.getElementById('zoomSlider').value = newPPS;
-                            updateZoom(newPPS);
+                            updateZoom(PPS + delta);
                         }
                     }, {passive: false});
                 });
             }
 
             // ==========================================
-            // 4. AUDIO ENGINE SETUP & ROUTING
+            // 4. TRUE REVERB & AUDIO ROUTING
             // ==========================================
             function getLoopDuration() { return (60.0 / tempo) * 0.25 * STEPS; }
+
+            // Synthesize the acoustic space (Impulse Response)
+            function createReverbIR(audioCtx) {
+                let length = audioCtx.sampleRate * 2.5; // 2.5 seconds tail
+                let impulse = audioCtx.createBuffer(2, length, audioCtx.sampleRate);
+                let left = impulse.getChannelData(0); let right = impulse.getChannelData(1);
+                for (let i = 0; i < length; i++) {
+                    let n = 1 - (i / length);
+                    left[i] = (Math.random() * 2 - 1) * Math.pow(n, 3);
+                    right[i] = (Math.random() * 2 - 1) * Math.pow(n, 3);
+                }
+                return impulse;
+            }
 
             function initAudio() {
                 if (!audioCtx) {
@@ -302,97 +321,141 @@
                     masterGain = audioCtx.createGain(); masterGain.connect(audioCtx.destination);
                     mixDest = audioCtx.createMediaStreamDestination(); masterGain.connect(mixDest);
                     
-                    noiseBuffer = audioCtx.createBuffer(1, audioCtx.sampleRate * 2, audioCtx.sampleRate);
-                    const output = noiseBuffer.getChannelData(0);
-                    for (let i = 0; i < output.length; i++) output[i] = Math.random() * 2 - 1;
+                    sharedReverbBuffer = createReverbIR(audioCtx);
                     
-                    initTrackRouting(drumTracks);
-                    initTrackRouting(vocalTracks);
+                    initDrumRouting();
+                    initVocalRouting();
                     requestAnimationFrame(updateVisuals);
                 }
                 if (audioCtx.state === 'suspended') audioCtx.resume();
             }
 
-            function initTrackRouting(tracksArray) {
-                tracksArray.forEach(track => {
-                    if(track.gainNode) return;
-                    track.gainNode = audioCtx.createGain();
-                    track.delayNode = audioCtx.createDelay(5.0); track.delayNode.delayTime.value = 0;
-                    const feedback = audioCtx.createGain(); feedback.gain.value = 0.4;
-                    
-                    track.delayNode.connect(feedback); feedback.connect(track.delayNode);
-                    track.delayNode.connect(masterGain);
-                    track.gainNode.connect(masterGain); track.gainNode.connect(track.delayNode); 
-                    applyTrackFX(track);
+            function initDrumRouting() {
+                drumTracks.forEach(track => {
+                    if (track.inputGain) return;
+                    track.inputGain = audioCtx.createGain();
+                    track.reverbMix = audioCtx.createGain();
+                    track.convolver = audioCtx.createConvolver();
+                    track.convolver.buffer = sharedReverbBuffer;
+
+                    // Routing
+                    track.inputGain.connect(masterGain); // Dry
+                    track.inputGain.connect(track.convolver);
+                    track.convolver.connect(track.reverbMix);
+                    track.reverbMix.connect(masterGain); // Wet Reverb
+
+                    applyDrumFX(track);
                 });
             }
 
-            function applyTrackFX(track) {
-                if(!track.gainNode) return;
-                track.gainNode.gain.value = track.volume;
+            function initVocalRouting() {
+                vocalTracks.forEach(track => {
+                    if(track.inputGain) return;
+                    track.inputGain = audioCtx.createGain();
+                    
+                    // Reverb Setup
+                    track.reverbMix = audioCtx.createGain();
+                    track.convolver = audioCtx.createConvolver();
+                    track.convolver.buffer = sharedReverbBuffer;
+                    
+                    // Echo (Delay) Setup
+                    track.delayNode = audioCtx.createDelay(5.0); track.delayNode.delayTime.value = 0;
+                    track.delayFeedback = audioCtx.createGain(); track.delayFeedback.gain.value = 0.4;
+                    track.delayMix = audioCtx.createGain();
+
+                    // Echo Loop
+                    track.delayNode.connect(track.delayFeedback); track.delayFeedback.connect(track.delayNode);
+
+                    // Master Routing
+                    track.inputGain.connect(masterGain); // Dry
+                    
+                    // Route to Reverb
+                    track.inputGain.connect(track.convolver);
+                    track.convolver.connect(track.reverbMix);
+                    track.reverbMix.connect(masterGain);
+                    
+                    // Route to Echo
+                    track.inputGain.connect(track.delayNode);
+                    track.delayNode.connect(track.delayMix);
+                    track.delayMix.connect(masterGain);
+                    
+                    applyVoxFX(track);
+                });
+            }
+
+            function applyDrumFX(track) {
+                if(!track.inputGain) return;
+                track.inputGain.gain.value = track.volume;
+                track.reverbMix.gain.value = track.reverb;
+            }
+
+            function applyVoxFX(track) {
+                if(!track.inputGain) return;
+                track.inputGain.gain.value = track.volume;
+                track.reverbMix.gain.value = track.reverb;
+                // Echo is tempo synced
                 track.delayNode.delayTime.value = track.echo > 0 ? (60 / tempo) * 0.75 : 0;
+                track.delayMix.gain.value = track.echo;
             }
 
             window.updateDrumFX = (id, param, val) => {
                 const t = drumTracks.find(d => d.id === id); val = parseFloat(val);
-                if (param === 'vol') t.volume = val; if (param === 'pitch') t.pitch = val; if (param === 'echo') t.echo = val;
-                applyTrackFX(t);
+                if (param === 'vol') t.volume = val; if (param === 'pitch') t.pitch = val; if (param === 'reverb') t.reverb = val;
+                applyDrumFX(t);
             };
 
             window.updateVoxFX = (id, param, val) => {
                 const t = vocalTracks.find(v => v.id === id); val = parseFloat(val);
-                if (param === 'vol') t.volume = val; if (param === 'pitch') t.pitch = val; if (param === 'echo') t.echo = val;
-                applyTrackFX(t);
+                if (param === 'vol') t.volume = val; if (param === 'pitch') t.pitch = val; 
+                if (param === 'reverb') t.reverb = val; if (param === 'echo') t.echo = val;
+                applyVoxFX(t);
             };
 
             // ==========================================
-            // 5. SYNTHESIS (Upgraded Fuller Drums)
+            // 5. SYNTHESIS
             // ==========================================
             function playDrumSound(track, time, context = audioCtx, destination = masterGain) {
-                let currentNoiseBuffer = noiseBuffer;
-                if (context !== audioCtx) {
-                    currentNoiseBuffer = context.createBuffer(1, context.sampleRate * 2, context.sampleRate);
-                    const out = currentNoiseBuffer.getChannelData(0);
-                    for (let i = 0; i < out.length; i++) out[i] = Math.random() * 2 - 1;
-                }
-
-                // Send through the track's dedicated effect chain if playing live
-                let targetDest = (context === audioCtx && track.gainNode) ? track.gainNode : destination;
+                let targetDest = (context === audioCtx && track.inputGain) ? track.inputGain : destination;
 
                 if (track.id === 'kick') {
-                    // Upgraded Kick: Lower frequency, slight pitch envelope, longer decay for "fullness"
                     const osc = context.createOscillator(), gain = context.createGain();
                     osc.connect(gain).connect(targetDest);
                     osc.frequency.setValueAtTime(120 * track.pitch, time); 
-                    osc.frequency.exponentialRampToValueAtTime(40 * track.pitch, time + 0.1); // Thump
+                    osc.frequency.exponentialRampToValueAtTime(40 * track.pitch, time + 0.1);
                     osc.frequency.exponentialRampToValueAtTime(0.001, time + 0.8);
-                    gain.gain.setValueAtTime(1, time); 
-                    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.8);
+                    gain.gain.setValueAtTime(1, time); gain.gain.exponentialRampToValueAtTime(0.001, time + 0.8);
                     
-                    // Click definition
                     const clickOsc = context.createOscillator(), clickGain = context.createGain();
                     clickOsc.type = 'square'; clickOsc.frequency.value = 800;
                     clickGain.gain.setValueAtTime(0.3, time); clickGain.gain.exponentialRampToValueAtTime(0.001, time + 0.02);
                     clickOsc.connect(clickGain).connect(targetDest);
+                    
                     clickOsc.start(time); clickOsc.stop(time + 0.05);
-
                     osc.start(time); osc.stop(time + 0.8);
 
                 } else if (track.id === 'snare') {
+                    // Quick white noise approximation for offline or use real buffer for fuller sound
                     const noise = context.createBufferSource(), filter = context.createBiquadFilter(), gain = context.createGain();
-                    noise.buffer = currentNoiseBuffer; filter.type = 'highpass'; filter.frequency.value = 1000 * track.pitch;
+                    let nBuffer = context.createBuffer(1, context.sampleRate * 0.5, context.sampleRate);
+                    let nData = nBuffer.getChannelData(0);
+                    for (let i = 0; i < nData.length; i++) nData[i] = Math.random() * 2 - 1;
+                    
+                    noise.buffer = nBuffer; filter.type = 'highpass'; filter.frequency.value = 1000 * track.pitch;
                     gain.gain.setValueAtTime(1, time); gain.gain.exponentialRampToValueAtTime(0.01, time + 0.25);
                     noise.connect(filter).connect(gain).connect(targetDest); noise.start(time); noise.stop(time + 0.25);
                     
                     const osc = context.createOscillator(), oGain = context.createGain();
                     osc.type = 'triangle'; osc.connect(oGain).connect(targetDest);
-                    osc.frequency.setValueAtTime(250 * track.pitch, time); oGain.gain.setValueAtTime(0.8, time);
-                    oGain.gain.exponentialRampToValueAtTime(0.01, time + 0.15);
+                    osc.frequency.setValueAtTime(250 * track.pitch, time); oGain.gain.setValueAtTime(0.8, time); oGain.gain.exponentialRampToValueAtTime(0.01, time + 0.15);
                     osc.start(time); osc.stop(time + 0.2);
 
                 } else if (track.id === 'hihat') {
                     const noise = context.createBufferSource(), filter = context.createBiquadFilter(), gain = context.createGain();
-                    noise.buffer = currentNoiseBuffer; filter.type = 'highpass'; filter.frequency.value = 7000 * track.pitch;
+                    let nBuffer = context.createBuffer(1, context.sampleRate * 0.1, context.sampleRate);
+                    let nData = nBuffer.getChannelData(0);
+                    for (let i = 0; i < nData.length; i++) nData[i] = Math.random() * 2 - 1;
+
+                    noise.buffer = nBuffer; filter.type = 'highpass'; filter.frequency.value = 7000 * track.pitch;
                     gain.gain.setValueAtTime(0.6, time); gain.gain.exponentialRampToValueAtTime(0.01, time + 0.05);
                     noise.connect(filter).connect(gain).connect(targetDest); noise.start(time); noise.stop(time + 0.05);
                 }
@@ -460,7 +523,7 @@
                             });
                             stream.getTracks().forEach(t => t.stop());
                             renderStaticClips(); 
-                        } catch (error) { console.error("Decoding Failed", error); }
+                        } catch (error) {}
                     };
 
                     activeRecTrack = trackId;
@@ -491,30 +554,36 @@
             // 7. PIXELS-PER-SECOND SCALING & VISUALS
             // ==========================================
             function updateZoom(newPPS) {
-                PPS = Math.max(20, Math.min(newPPS, 600)); // Clamp zoom between 20 and 600
-                renderStaticClips(); // Re-render triggers UI width expansion
-                drawSyncGrids(); // Redraw grid lines
+                PPS = Math.max(30, Math.min(newPPS, 500)); 
+                renderStaticClips(); 
             }
-
-            document.getElementById('zoomSlider').addEventListener('input', (e) => {
-                updateZoom(parseInt(e.target.value));
-            });
 
             function drawSyncGrids() {
                 const loopSecs = getLoopDuration();
-                const beatSecs = loopSecs / 4; // Draw lines every quarter note
+                const barSecs = loopSecs / 2; // Since 32 steps = 2 bars
+                const beatSecs = barSecs / 4; 
                 
                 document.querySelectorAll('.grid-canvas').forEach(canvas => {
                     const p = canvas.parentElement;
                     canvas.width = p.clientWidth; canvas.height = p.clientHeight;
                     const ctx = canvas.getContext('2d');
                     ctx.clearRect(0,0, canvas.width, canvas.height);
-                    ctx.strokeStyle = '#30363d'; ctx.lineWidth = 1;
-                    ctx.setLineDash([4, 4]);
-
+                    
+                    // Draw lines from time 0 to max width
                     for (let t = 0; t * PPS < canvas.width; t += beatSecs) {
                         const x = t * PPS;
-                        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+                        ctx.beginPath();
+                        
+                        // Thicker line on the Bar
+                        if (Math.abs(t % barSecs) < 0.01) {
+                            ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+                            ctx.lineWidth = 2;
+                        } else {
+                            ctx.strokeStyle = 'rgba(88, 166, 255, 0.3)';
+                            ctx.lineWidth = 1;
+                        }
+                        
+                        ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
                     }
                 });
             }
@@ -522,18 +591,17 @@
             function updateVisuals() {
                 if (!audioCtx) return;
                 
-                let maxAudioSecs = 30; // Min project width 30s
+                let maxAudioSecs = 30; 
                 vocalClips.forEach(c => { if (c.startTime + c.duration > maxAudioSecs) maxAudioSecs = c.startTime + c.duration; });
                 if (isRecording) {
                     const currentRecLen = punchInTargetTime + (audioCtx.currentTime - recordingStartTime);
                     if (currentRecLen > maxAudioSecs) maxAudioSecs = currentRecLen;
                 }
                 
-                // Expand container width dynamically based on absolute pixels
                 const reqPx = maxAudioSecs * PPS;
-                document.querySelectorAll('.track-inner').forEach(inner => {
+                document.querySelectorAll('.vocal-timeline-inner').forEach(inner => {
                     if (inner.clientWidth < reqPx) {
-                        inner.style.width = `${reqPx + 500}px`; // Add 500px buffer for comfort
+                        inner.style.width = `${reqPx + 500}px`; 
                         drawSyncGrids();
                     }
                 });
@@ -545,18 +613,20 @@
                         stopPlayback(); return;
                     }
 
-                    // --- PERFECT BEAT PLAYHEAD MODULO LOOPING ---
-                    // Modulo ensures it wraps infinitely 0 -> loopDuration -> 0 -> loopDuration
+                    // --- PERFECT BEAT PLAYHEAD ---
+                    // Visualizes perfectly across all drum tracks
                     const loopDur = getLoopDuration();
                     const currentDrumOffset = audioCtx.currentTime - drumLoopStartOffset;
                     const beatCycleTime = currentDrumOffset % loopDur;
                     const beatPct = (beatCycleTime / loopDur) * 100;
                     
-                    const bPh = document.getElementById('playhead-beat');
-                    if (bPh) { 
-                        bPh.style.display = playState === 'SOLO' ? 'none' : 'block'; 
-                        bPh.style.left = `${beatPct}%`; 
-                    }
+                    drumTracks.forEach(drum => {
+                        const bPh = document.getElementById(`playhead-beat-${drum.id}`);
+                        if (bPh) { 
+                            bPh.style.display = playState === 'SOLO' ? 'none' : 'block'; 
+                            bPh.style.left = `${beatPct}%`; 
+                        }
+                    });
 
                     // --- VOCAL PLAYHEAD (Absolute Pixels) ---
                     const vocalPx = currentAbsTime * PPS;
@@ -564,14 +634,12 @@
                         ph.style.display = playState === 'BEAT_ONLY' ? 'none' : 'block';
                         ph.style.left = `${vocalPx}px`;
                         
-                        // Auto-scroll viewport if playhead moves out of sight
                         const vp = ph.closest('.track-viewport');
                         if (vp && (vocalPx > vp.scrollLeft + vp.clientWidth * 0.9)) {
                             vp.scrollLeft = vocalPx - vp.clientWidth * 0.5;
                         }
                     });
 
-                    // Punch-in execution
                     if (isWaitingToPunchIn && currentAbsTime >= punchInTargetTime) {
                         isWaitingToPunchIn = false;
                         mediaRec.start(); isRecording = true; recordingStartTime = audioCtx.currentTime;
@@ -593,8 +661,7 @@
             function drawOscilloscope() {
                 if(!liveCanvasCtx || !liveAnalyser) return;
                 liveAnalyser.getByteTimeDomainData(liveDataArray);
-                const w = activeRecordingBlock.clientWidth;
-                const h = 80;
+                const w = activeRecordingBlock.clientWidth; const h = 80;
                 liveCanvasCtx.canvas.width = w; liveCanvasCtx.canvas.height = h;
                 liveCanvasCtx.clearRect(0,0,w,h);
                 liveCanvasCtx.lineWidth = 2; liveCanvasCtx.strokeStyle = '#fff';
@@ -609,7 +676,7 @@
             }
 
             // ==========================================
-            // 8. CLIP RENDERING, DRAGGING, & CLIPBOARD
+            // 8. CLIP RENDERING & EDITING
             // ==========================================
             function renderStaticClips() {
                 document.querySelectorAll('.audio-clip:not(.recording-block)').forEach(el => el.remove());
@@ -623,7 +690,6 @@
                     if (clip.id === selectedClipId) clipEl.classList.add('selected');
                     clipEl.id = clip.id;
                     
-                    // The core fix: Width and Left are absolute pixels, so it never "squishes"
                     clipEl.style.left = `${clip.startTime * PPS}px`; 
                     clipEl.style.width = `${clip.duration * PPS}px`;
                     clipEl.innerHTML = `<canvas class="wave-canvas"></canvas>`;
@@ -649,7 +715,7 @@
             function handleClipDrag(e) {
                 e.preventDefault();
                 selectedClipId = e.target.closest('.audio-clip').id;
-                renderStaticClips(); // Update selection visual
+                renderStaticClips(); 
 
                 let clip = vocalClips.find(c => c.id === selectedClipId);
                 const clipEl = document.getElementById(clip.id);
@@ -667,7 +733,7 @@
                     
                     if (foundTrackEl) {
                         const pixelMove = moveEvent.clientX - startMouseX;
-                        const timeMove = pixelMove / PPS; // Convert pixels back to time
+                        const timeMove = pixelMove / PPS; 
                         
                         let newTime = startClipTime + timeMove;
                         newTime = Math.max(0, newTime); 
@@ -712,9 +778,7 @@
 
             window.clearTrack = (trackId) => { vocalClips = vocalClips.filter(c => c.trackId !== trackId); renderStaticClips(); };
 
-            // --- KEYBOARD SHORTCUTS (Copy, Paste, Delete) ---
             window.addEventListener('keydown', (e) => {
-                // Ignore if recording or typing in an input
                 if (isRecording || isWaitingToPunchIn || e.target.tagName === 'INPUT') return;
                 
                 if (selectedClipId) {
@@ -759,12 +823,11 @@
                         const source = audioCtx.createBufferSource();
                         source.buffer = c.buffer;
                         source.playbackRate.value = trackSettings.pitch;
-                        source.connect(trackSettings.gainNode);
+                        source.connect(trackSettings.inputGain);
                         source.start(globalStartTime + c.startTime);
                         c.sourceNode = source;
                     }
                 });
-                
                 scheduler();
             }
 
@@ -785,7 +848,7 @@
                 document.querySelectorAll('.btn-rec-overwrite').forEach(btn => { btn.classList.remove('is-recording'); btn.innerText = '🔴 Overwrite'; });
                 document.querySelectorAll('.btn-rec-append').forEach(btn => { btn.classList.remove('is-recording', 'is-waiting'); btn.innerText = '➕ Append'; });
                 
-                document.getElementById('playhead-beat').style.display = 'none';
+                document.querySelectorAll('.playhead-beat').forEach(ph => ph.style.display = 'none');
                 document.querySelectorAll('.playhead-vocal').forEach(ph => ph.style.display = 'none');
             }
 
@@ -793,7 +856,6 @@
                 if(playState !== 'STOPPED') stopPlayback(); else { startPlayback('FULL'); document.getElementById('btnPlayFull').innerText = "⏸ Stop Full"; document.getElementById('btnPlayFull').classList.add('playing'); }
             });
 
-            // The isolated play beat button inside the beat section
             document.getElementById('btnPlayBeat').addEventListener('click', () => {
                 if(playState !== 'STOPPED') stopPlayback(); else { startPlayback('BEAT_ONLY'); document.getElementById('btnPlayBeat').innerText = "⏸ Stop Beat"; document.getElementById('btnPlayBeat').classList.add('playing'); }
             });
@@ -807,7 +869,6 @@
                 drawSyncGrids();
             });
 
-            // Background deselect clip
             document.body.addEventListener('mousedown', (e) => {
                 if (!e.target.closest('.audio-clip')) {
                     selectedClipId = null;
@@ -825,26 +886,47 @@
                 vocalClips.forEach(c => { if (c.startTime + c.duration > maxDuration) maxDuration = c.startTime + c.duration; });
                 maxDuration += 0.5; 
 
-                const offlineCtx = new OfflineAudioContext(1, audioCtx.sampleRate * maxDuration, audioCtx.sampleRate);
+                const offlineCtx = new OfflineAudioContext(2, audioCtx.sampleRate * maxDuration, audioCtx.sampleRate);
                 const offlineMaster = offlineCtx.createGain(); offlineMaster.connect(offlineCtx.destination);
                 
+                const offlineReverbBuffer = createReverbIR(offlineCtx);
+
+                const offlineDrumTracks = drumTracks.map(t => {
+                    const g = offlineCtx.createGain(); const rMix = offlineCtx.createGain(); const conv = offlineCtx.createConvolver();
+                    conv.buffer = offlineReverbBuffer;
+                    g.connect(offlineMaster); g.connect(conv); conv.connect(rMix); rMix.connect(offlineMaster);
+                    g.gain.value = t.volume; rMix.gain.value = t.reverb;
+                    return { id: t.id, inputGain: g, pitch: t.pitch };
+                });
+
                 const offlineVocalTracks = vocalTracks.map(t => {
-                    const g = offlineCtx.createGain(); const d = offlineCtx.createDelay(5.0); const fb = offlineCtx.createGain();
+                    const g = offlineCtx.createGain(); 
+                    const rMix = offlineCtx.createGain(); const conv = offlineCtx.createConvolver(); conv.buffer = offlineReverbBuffer;
+                    const d = offlineCtx.createDelay(5.0); const fb = offlineCtx.createGain(); const dMix = offlineCtx.createGain();
+                    
                     d.delayTime.value = t.echo > 0 ? (60 / tempo) * 0.75 : 0; fb.gain.value = 0.4;
-                    d.connect(fb); fb.connect(d); d.connect(offlineMaster); g.connect(offlineMaster); g.connect(d);
-                    g.gain.value = t.volume; return { id: t.id, gainNode: g, pitch: t.pitch };
+                    d.connect(fb); fb.connect(d); d.connect(dMix); dMix.connect(offlineMaster);
+                    g.connect(offlineMaster); g.connect(conv); conv.connect(rMix); rMix.connect(offlineMaster); g.connect(d);
+                    
+                    g.gain.value = t.volume; rMix.gain.value = t.reverb; dMix.gain.value = t.echo;
+                    return { id: t.id, inputGain: g, pitch: t.pitch };
                 });
 
                 let renderTime = 0.0; let step = 0;
                 while (renderTime < maxDuration) {
-                    drumTracks.forEach(d => { if (d.pattern[step % STEPS]) playDrumSound(d, renderTime, offlineCtx, offlineMaster); });
+                    drumTracks.forEach(d => { 
+                        if (d.pattern[step % STEPS]) {
+                            const trackSettings = offlineDrumTracks.find(t => t.id === d.id);
+                            playDrumSound(trackSettings, renderTime, offlineCtx, offlineMaster); 
+                        }
+                    });
                     renderTime += (60.0 / tempo) * 0.25; step++;
                 }
 
                 vocalClips.forEach(c => {
                     const trackSettings = offlineVocalTracks.find(t => t.id === c.trackId);
                     const source = offlineCtx.createBufferSource(); source.buffer = c.buffer;
-                    source.playbackRate.value = trackSettings.pitch; source.connect(trackSettings.gainNode);
+                    source.playbackRate.value = trackSettings.pitch; source.connect(trackSettings.inputGain);
                     source.start(c.startTime);
                 });
 
