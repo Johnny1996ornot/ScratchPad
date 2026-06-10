@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BeatBox - Demo Creator</title>
+    <title>BeatBox - Pro Demo Creator</title>
     <style>
+        /* --- CORE STYLING & MINIMALIST THEME --- */
         :root {
             --bg: #0d1117;
             --surface: #161b22;
@@ -15,93 +16,148 @@
             --warning: #d29922;
             --text-main: #c9d1d9;
             --text-muted: #8b949e;
+            --drum-kick: #ff7b72;
+            --drum-snare: #d2a8ff;
+            --drum-hihat: #7ee787;
         }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: var(--bg); color: var(--text-main);
-            margin: 0; padding: 20px;
-            display: flex; flex-direction: column; align-items: center;
-            user-select: none; overflow-x: hidden;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            user-select: none;
+            overflow-x: hidden;
         }
 
-        .app-container { width: 100%; max-width: 1000px; display: flex; flex-direction: column; gap: 20px; }
+        .app-container {
+            width: 100%;
+            max-width: 1050px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
 
-        /* HEADER */
-        header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 15px; border-bottom: 1px solid var(--border); }
-        .logo h1 { margin: 0; font-size: 24px; font-weight: 900; letter-spacing: 2px; }
-        .logo span { color: var(--primary); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
-        .kofi-btn { background: #FFDD00; color: #000; text-decoration: none; padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 13px; display: flex; align-items: center; gap: 8px;}
+        /* --- HEADER --- */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .logo h1 { margin: 0; font-size: 26px; font-weight: 900; letter-spacing: 2px; }
+        .logo span { color: var(--primary); font-size: 13px; text-transform: uppercase; letter-spacing: 1px; }
+        
+        .kofi-btn {
+            background: #FFDD00; color: #000; text-decoration: none; padding: 8px 16px;
+            border-radius: 20px; font-weight: bold; font-size: 13px; display: flex; align-items: center; gap: 8px;
+        }
         .kofi-btn:hover { opacity: 0.9; }
 
-        /* PANELS */
-        .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
-        .section-title { margin: 0 0 10px 0; font-size: 15px; color: #fff; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
-        
-        /* TOP CONTROLS */
-        .top-controls { display: flex; justify-content: space-between; align-items: center; background: var(--surface); padding: 15px; border-radius: 12px; border: 1px solid var(--border);}
-        .play-btn { background: var(--primary); color: white; border: none; padding: 10px 20px; font-size: 15px; font-weight: bold; border-radius: 8px; cursor: pointer; transition: 0.1s;}
-        .play-btn:active { transform: scale(0.97); }
-        .play-btn.playing { background: var(--danger); }
-        .bpm-control { display: flex; align-items: center; gap: 10px; font-weight: bold; }
-
-        /* --- UI LAYOUT STRUCTURE --- */
-        .track-row { display: flex; align-items: stretch; margin-bottom: 10px; border: 1px solid var(--border); border-radius: 6px; background: #090c10; }
-        
-        .track-header { 
-            width: 220px; padding: 12px; background: var(--surface); border-right: 1px solid var(--border);
-            display: flex; flex-direction: column; justify-content: center; gap: 8px; flex-shrink: 0;
+        /* --- PANELS & STRUCTURE --- */
+        .panel {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
         
-        .track-content { flex: 1; position: relative; overflow: hidden; display: flex; align-items: center; padding: 6px; min-width: 600px; }
-        
-        /* Sliders */
-        .controls-grid { display: grid; grid-template-columns: 40px 1fr; gap: 4px; align-items: center; }
-        .controls-grid span { font-size: 11px; color: var(--text-muted); }
-        .mini-slider { width: 100%; height: 4px; accent-color: var(--primary); }
+        .section-title {
+            margin: 0 0 10px 0; font-size: 16px; color: #fff; text-transform: uppercase;
+            letter-spacing: 1px; border-bottom: 1px solid var(--border); padding-bottom: 10px;
+        }
 
-        /* --- SECTION 1: THE BEAT --- */
-        .drum-grid { 
-            display: grid; grid-template-columns: repeat(16, 1fr); width: 100%; gap: 2px; height: 100%;
+        .instructions { font-size: 13px; color: var(--text-muted); margin-bottom: 15px; line-height: 1.5; }
+
+        /* --- GLOBAL CONTROLS --- */
+        .top-controls {
+            display: flex; justify-content: space-between; align-items: center;
+            background: var(--surface); padding: 15px 20px; border-radius: 12px; border: 1px solid var(--border);
         }
         
-        .step { 
-            height: 40px; /* Forces boxes to render */
-            background: #21262d; border-radius: 4px; cursor: pointer; transition: 0.1s; border: 1px solid #161b22;
+        .btn-master {
+            color: white; border: none; padding: 12px 20px; font-size: 14px;
+            font-weight: bold; border-radius: 8px; cursor: pointer; transition: 0.1s;
+        }
+        .btn-master:active { transform: scale(0.97); }
+        .btn-master-full { background: var(--primary); }
+        .btn-master-beat { background: #8957e5; }
+        .btn-master.playing { background: var(--danger); }
+        .btn-download { background: var(--accent); }
+
+        .bpm-control { display: flex; align-items: center; gap: 10px; font-weight: bold; font-size: 14px; }
+        .bpm-control input { width: 120px; accent-color: var(--primary); }
+
+        /* --- TRACK ROWS --- */
+        .track-row {
+            display: flex; align-items: stretch; margin-bottom: 12px;
+            border: 1px solid var(--border); border-radius: 8px; background: #090c10;
+        }
+        
+        .track-header {
+            width: 240px; padding: 15px; background: var(--surface); border-right: 1px solid var(--border);
+            display: flex; flex-direction: column; justify-content: center; gap: 10px; flex-shrink: 0;
+            border-top-left-radius: 8px; border-bottom-left-radius: 8px;
+        }
+        
+        .track-content {
+            flex: 1; position: relative; overflow: hidden; display: flex; align-items: center;
+            padding: 8px; min-width: 600px;
+        }
+
+        /* --- TRACK CONTROLS --- */
+        .controls-grid { display: grid; grid-template-columns: 40px 1fr; gap: 6px; align-items: center; }
+        .controls-grid span { font-size: 11px; color: var(--text-muted); font-weight: 600; }
+        .mini-slider { width: 100%; height: 4px; accent-color: var(--primary); cursor: pointer; }
+
+        .btn-group { display: flex; gap: 6px; }
+        .btn-action {
+            flex: 1; background: transparent; border: 1px solid var(--border); color: var(--text-main);
+            padding: 6px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 11px; text-align: center;
+        }
+        .btn-action:hover { background: rgba(255,255,255,0.05); }
+        
+        .btn-rec-overwrite { border-color: var(--danger); color: var(--danger); }
+        .btn-rec-append { border-color: var(--warning); color: var(--warning); }
+        .btn-solo { border-color: var(--primary); color: var(--primary); }
+        
+        .btn-rec-overwrite.is-recording { background: var(--danger); color: white; animation: pulse 1s infinite; }
+        .btn-rec-append.is-waiting { background: var(--warning); color: #000; animation: pulse 1s infinite; }
+        .btn-rec-append.is-recording { background: var(--danger); border-color: var(--danger); color: white; animation: pulse 1s infinite; }
+
+        @keyframes pulse { 50% { opacity: 0.6; } }
+
+        /* --- DRUM SEQUENCER --- */
+        .drum-grid { display: grid; grid-template-columns: repeat(16, 1fr); width: 100%; gap: 3px; height: 100%; }
+        
+        .step {
+            height: 44px; background: #21262d; border-radius: 4px; cursor: pointer;
+            transition: background-color 0.1s; border: 1px solid #161b22;
         }
         .step:nth-child(4n + 1) { background: #2a313a; border-left: 2px solid rgba(88, 166, 255, 0.4); }
         
-        .step.active[data-drum="kick"] { background: #ff7b72; box-shadow: 0 0 8px rgba(255,123,114,0.4); }
-        .step.active[data-drum="snare"] { background: #d2a8ff; box-shadow: 0 0 8px rgba(210,168,255,0.4); }
-        .step.active[data-drum="hihat"] { background: #7ee787; box-shadow: 0 0 8px rgba(126,231,135,0.4); }
-        
-        .playhead-beat { position: absolute; top: 0; bottom: 0; width: 2px; background: white; pointer-events: none; display: none; z-index: 10; box-shadow: 0 0 10px white; }
+        .step.active[data-drum="kick"] { background: var(--drum-kick); box-shadow: 0 0 10px rgba(255,123,114,0.3); }
+        .step.active[data-drum="snare"] { background: var(--drum-snare); box-shadow: 0 0 10px rgba(210,168,255,0.3); }
+        .step.active[data-drum="hihat"] { background: var(--drum-hihat); box-shadow: 0 0 10px rgba(126,231,135,0.3); }
 
-        /* --- SECTION 2: THE VOICE --- */
-        .vocal-timeline { width: 100%; height: 80px; position: relative; background: #090c10; }
+        /* --- VOCAL TIMELINE --- */
+        .vocal-timeline { width: 100%; height: 90px; position: relative; background: #090c10; border-radius: 4px; }
 
-        .audio-clip { 
-            position: absolute; height: 80%; top: 10%; background: #1f6feb; 
-            border-radius: 4px; border: 1px solid #79c0ff; overflow: hidden; cursor: grab;
+        .audio-clip {
+            position: absolute; height: 80%; top: 10%; background: #1f6feb; border-radius: 6px;
+            border: 1px solid #79c0ff; overflow: hidden; cursor: grab; box-shadow: 0 4px 12px rgba(0,0,0,0.4);
         }
         .audio-clip:active { cursor: grabbing; filter: brightness(1.2); }
 
-        .recording-block { background: rgba(248,81,73,0.2); border: 1px dashed var(--danger); pointer-events: none; }
+        .recording-block { background: rgba(248,81,73,0.25); border: 1px dashed var(--danger); pointer-events: none; }
         .wave-canvas { width: 100%; height: 100%; display: block; pointer-events: none; }
 
-        .btn-group { display: flex; gap: 4px; }
-        .btn-rec { flex: 1; background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 5px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 11px; }
-        .btn-rec-append { flex: 1; background: transparent; border: 1px solid var(--warning); color: var(--warning); padding: 5px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 11px; }
-        .btn-solo { flex: 1; background: transparent; border: 1px solid var(--primary); color: var(--primary); padding: 5px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold; }
-        .btn-del { flex: 1; background: transparent; border: 1px solid var(--text-muted); color: var(--text-muted); padding: 5px; border-radius: 4px; cursor: pointer; font-size: 11px; }
-        
-        .btn-rec.is-recording { background: var(--danger); color: white; animation: blink 1s infinite; }
-        .btn-rec-append.is-waiting { background: var(--warning); color: #000; animation: blink 1s infinite; }
-        .btn-rec-append.is-recording { background: var(--danger); border-color: var(--danger); color: white; animation: blink 1s infinite; }
-        
-        @keyframes blink { 50% { opacity: 0.6; } }
-        
-        /* The Absolute Playhead */
+        /* --- PLAYHEADS --- */
+        .playhead-beat { position: absolute; top: 0; bottom: 0; width: 3px; background: #ffffff; pointer-events: none; display: none; z-index: 10; box-shadow: 0 0 10px rgba(255,255,255,0.8); border-radius: 2px;}
         .playhead-vocal { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--danger); pointer-events: none; display: none; z-index: 10; box-shadow: 0 0 10px var(--danger); }
 
     </style>
@@ -112,31 +168,36 @@
         <header>
             <div class="logo">
                 <h1>BEATBOX</h1>
-                <span>Demo Creator</span>
+                <span>Pro Demo Creator</span>
             </div>
             <a href="https://buymeacoffee.com/" target="_blank" class="kofi-btn">☕ Buy Me a Coffee</a>
         </header>
 
         <div class="top-controls">
-            <button id="masterPlayBtn" class="play-btn">▶ Play Full Demo</button>
+            <div style="display: flex; gap: 10px;">
+                <button id="btnPlayFull" class="btn-master btn-master-full">▶ Play Full Demo</button>
+                <button id="btnPlayBeat" class="btn-master btn-master-beat">🥁 Play Beat Only</button>
+            </div>
             <div class="bpm-control">
                 <label>BPM: <span id="bpmVal">120</span></label>
                 <input type="range" id="bpmSlider" min="70" max="180" value="120">
             </div>
-            <button id="downloadBtn" class="play-btn" style="background: var(--accent);">⬇ Download Mix (.WAV)</button>
+            <button id="btnDownload" class="btn-master btn-download">⬇ Download Mix (.WAV)</button>
         </div>
 
         <div class="panel">
-            <h2 class="section-title">1. Guide Beat</h2>
+            <h2 class="section-title">1. Guide Beat (Loops Endlessly)</h2>
             <div id="beat-container"></div>
         </div>
 
         <div class="panel">
             <h2 class="section-title">2. Free-Form Voice Recorder</h2>
-            <div style="font-size: 12px; color: #8b949e; margin-bottom: 15px; border-left: 3px solid var(--primary); padding-left: 10px;">
-                <strong>🔴 Overwrite:</strong> Clears the track and starts recording from the very beginning (0:00).<br>
-                <strong>➕ Append:</strong> Starts playback so you can hear your track, and automatically resumes recording right where you left off.<br>
-                <strong>Editing:</strong> <b>Drag</b> clips to nudge their timing. <b>Double-click</b> to split them.
+            <div class="instructions">
+                <ul style="margin: 0; padding-left: 20px;">
+                    <li><strong>🔴 Overwrite:</strong> Erases the track and starts recording a new take from 0:00.</li>
+                    <li><strong>➕ Append:</strong> Starts playback so you can listen, then seamlessly punches in to record at the exact end of your last clip.</li>
+                    <li><strong>Editing:</strong> <b>Drag</b> blue clips to fix timing. <b>Double-click</b> to cut them in half.</li>
+                </ul>
             </div>
             <div id="vocal-container"></div>
         </div>
@@ -145,27 +206,30 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             
-            // --- CORE AUDIO SYSTEM ---
+            // ==========================================
+            // 1. CORE SYSTEM & STATE MANAGEMENT
+            // ==========================================
             let audioCtx, masterGain, mixDest, noiseBuffer;
             const STEPS = 16;
             let tempo = 120;
             
-            // State
-            let isPlaying = false;
-            let isSoloing = false;
+            // System States
+            let playState = 'STOPPED'; // STOPPED, FULL, BEAT_ONLY, SOLO
             let isRecording = false;
             let isWaitingToPunchIn = false;
             
-            // Clocks
+            // Global Clocks
             let currentDrumStep = 0;
             let nextDrumTime = 0.0;
-            let drumLoopStartOffset = 0.0; 
             let globalStartTime = 0.0;     
             let timerID;
             
+            // UI Scaling
             let projectDisplayDuration = 0; 
             
-            // --- DATA STRUCTURES ---
+            // ==========================================
+            // 2. DATA STRUCTURES
+            // ==========================================
             const drumData = [
                 { id: 'hihat', name: 'Hi-Hat', pitch: 1.0, pattern: [true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false] },
                 { id: 'snare', name: 'Snare', pitch: 1.0, pattern: [false, false, false, false, true, false, false, false, false, false, false, false, true, false, false, false] },
@@ -174,33 +238,37 @@
 
             let vocalTracks = [
                 { id: 'vox-1', volume: 1.0, pitch: 1.0, echo: 0, gainNode: null, delayNode: null },
-                { id: 'vox-2', volume: 1.0, pitch: 1.0, echo: 0, gainNode: null, delayNode: null }
+                { id: 'vox-2', volume: 1.0, pitch: 1.0, echo: 0, gainNode: null, delayNode: null },
+                { id: 'vox-3', volume: 1.0, pitch: 1.0, echo: 0, gainNode: null, delayNode: null }
             ];
 
             let vocalClips = [];
             let clipIdCounter = 0;
             
-            // Recording State
+            // Recording Variables
             let activeRecTrack = null;
             let mediaRec;
             let audioChunks = [];
-            let punchInTargetTime = 0; // Absolute time when recording should kick in
+            let punchInTargetTime = 0; 
             let recordingStartTime = 0; 
             let activeRecordingBlock = null;
             let liveAnalyser, liveDataArray, liveCanvasCtx;
 
-            // --- UI BUILDER ---
+            // ==========================================
+            // 3. UI GENERATION
+            // ==========================================
             const beatContainer = document.getElementById('beat-container');
             const vocalContainer = document.getElementById('vocal-container');
 
             function buildInterface() {
+                // Build Drums
                 beatContainer.innerHTML = '';
                 drumData.forEach((drum, index) => {
                     const row = document.createElement('div'); row.className = 'track-row';
                     
                     row.innerHTML = `
                         <div class="track-header">
-                            <span style="font-weight:bold; font-size:14px; color:white;">${drum.name}</span>
+                            <span style="font-weight:bold; font-size:15px; color:white;">${drum.name}</span>
                             <div class="controls-grid">
                                 <span>Pitch</span>
                                 <input type="range" class="mini-slider" min="0.5" max="2" step="0.1" value="${drum.pitch}" oninput="updateDrumPitch('${drum.id}', this.value)">
@@ -223,27 +291,32 @@
                     row.appendChild(content); beatContainer.appendChild(row);
                 });
 
+                // Build Vocals
                 vocalContainer.innerHTML = '';
                 vocalTracks.forEach((track, index) => {
                     const row = document.createElement('div'); row.className = 'track-row';
                     
                     row.innerHTML = `
                         <div class="track-header">
-                            <span style="font-weight:bold; font-size:14px; color:white;">Track ${index + 1}</span>
+                            <span style="font-weight:bold; font-size:15px; color:white;">Vocal ${index + 1}</span>
+                            
                             <div class="btn-group">
-                                <button class="btn-rec" onclick="startRecording('${track.id}', false)" id="rec-btn-new-${track.id}">🔴 Overwrite</button>
-                                <button class="btn-rec-append" onclick="startRecording('${track.id}', true)" id="rec-btn-append-${track.id}">➕ Append</button>
+                                <button class="btn-action btn-rec-overwrite" onclick="startRecording('${track.id}', false)" id="rec-btn-new-${track.id}">🔴 Overwrite</button>
+                                <button class="btn-action btn-rec-append" onclick="startRecording('${track.id}', true)" id="rec-btn-append-${track.id}">➕ Append</button>
                             </div>
+                            
                             <div class="btn-group">
-                                <button class="btn-solo" onclick="playSolo('${track.id}')">▶ Solo</button>
-                                <button class="btn-del" onclick="clearTrack('${track.id}')">🗑️ Clear</button>
+                                <button class="btn-action btn-solo" onclick="playSolo('${track.id}')">▶ Solo Audio</button>
+                                <button class="btn-action" onclick="clearTrack('${track.id}')">🗑️ Clear</button>
                             </div>
-                            <div class="controls-grid" style="margin-top: 4px;">
+                            
+                            <div class="controls-grid" style="margin-top: 5px;">
                                 <span>Vol</span><input type="range" class="mini-slider" min="0" max="2" step="0.1" value="${track.volume}" onchange="updateVoxFX('${track.id}', 'vol', this.value)">
                                 <span>Pitch</span><input type="range" class="mini-slider" min="0.5" max="1.5" step="0.1" value="${track.pitch}" onchange="updateVoxFX('${track.id}', 'pitch', this.value)">
                                 <span>Echo</span><input type="range" class="mini-slider" min="0" max="1" step="0.1" value="${track.echo}" onchange="updateVoxFX('${track.id}', 'echo', this.value)">
                             </div>
                         </div>
+                        
                         <div class="track-content">
                             <div class="vocal-timeline" id="timeline-${track.id}">
                                 <div id="playhead-vox-${track.id}" class="playhead-vocal"></div>
@@ -254,7 +327,9 @@
                 });
             }
 
-            // --- SYNTHESIS & TIMING ---
+            // ==========================================
+            // 4. AUDIO ENGINE SETUP
+            // ==========================================
             function getLoopDuration() { return (60.0 / tempo) * 0.25 * STEPS; }
 
             function initAudio() {
@@ -263,7 +338,7 @@
                     masterGain = audioCtx.createGain(); masterGain.connect(audioCtx.destination);
                     mixDest = audioCtx.createMediaStreamDestination(); masterGain.connect(mixDest);
                     
-                    // High quality noise buffer for snare and hihat
+                    // Generate high quality noise for drums
                     noiseBuffer = audioCtx.createBuffer(1, audioCtx.sampleRate * 2, audioCtx.sampleRate);
                     const output = noiseBuffer.getChannelData(0);
                     for (let i = 0; i < output.length; i++) output[i] = Math.random() * 2 - 1;
@@ -280,6 +355,7 @@
                     track.gainNode = audioCtx.createGain();
                     track.delayNode = audioCtx.createDelay(5.0); track.delayNode.delayTime.value = 0;
                     const feedback = audioCtx.createGain(); feedback.gain.value = 0.4;
+                    
                     track.delayNode.connect(feedback); feedback.connect(track.delayNode);
                     track.delayNode.connect(masterGain);
                     track.gainNode.connect(masterGain); track.gainNode.connect(track.delayNode); 
@@ -296,13 +372,15 @@
             window.updateDrumPitch = (id, val) => { drumData.find(t => t.id === id).pitch = parseFloat(val); };
             window.updateVoxFX = (id, param, val) => {
                 const track = vocalTracks.find(t => t.id === id);
-                val = parseFloat(val);
-                if (param === 'vol') track.volume = val; 
-                if (param === 'pitch') track.pitch = val;
-                if (param === 'echo') track.echo = val;
+                if (param === 'vol') track.volume = parseFloat(val); 
+                if (param === 'pitch') track.pitch = parseFloat(val);
+                if (param === 'echo') track.echo = parseFloat(val);
                 updateTrackFX(track);
             };
 
+            // ==========================================
+            // 5. SYNTHESIS & SCHEDULING
+            // ==========================================
             function playDrumSound(type, pitch, time, context = audioCtx, destination = masterGain) {
                 let currentNoiseBuffer = noiseBuffer;
                 if (context !== audioCtx) {
@@ -337,10 +415,11 @@
             }
 
             function scheduler() {
-                if (!isPlaying) return;
+                if (playState === 'STOPPED') return;
                 
                 while (nextDrumTime < audioCtx.currentTime + 0.1) {
-                    if (!isSoloing) {
+                    // Play drums if we are NOT in solo mode
+                    if (playState !== 'SOLO') {
                         drumData.forEach(d => { if (d.pattern[currentDrumStep]) playDrumSound(d.id, d.pitch, nextDrumTime); });
                     }
                     nextDrumTime += (60.0 / tempo) * 0.25;
@@ -348,18 +427,19 @@
                     
                     if (currentDrumStep >= STEPS) {
                         currentDrumStep = 0;
-                        drumLoopStartOffset = nextDrumTime - getLoopDuration(); 
                     }
                 }
                 timerID = window.setTimeout(scheduler, 25.0);
             }
 
-            // --- RECORDING: OVERWRITE VS APPEND ---
+            // ==========================================
+            // 6. ROBUST RECORDING SYSTEM
+            // ==========================================
             window.startRecording = async (trackId, isAppend) => {
                 const btnNew = document.getElementById(`rec-btn-new-${trackId}`);
                 const btnAppend = document.getElementById(`rec-btn-append-${trackId}`);
                 
-                // If already recording or waiting, clicking stops it.
+                // Toggle off if currently active
                 if (isRecording || isWaitingToPunchIn) {
                     stopPlayback();
                     return;
@@ -367,12 +447,10 @@
                 
                 initAudio();
 
-                // Clear Track if Overwriting
                 if (!isAppend) {
                     clearTrack(trackId);
                     punchInTargetTime = 0;
                 } else {
-                    // Find the end of the last clip on this track
                     punchInTargetTime = 0;
                     const trackClips = vocalClips.filter(c => c.trackId === trackId);
                     trackClips.forEach(c => {
@@ -385,46 +463,61 @@
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                     const micSource = audioCtx.createMediaStreamSource(stream);
+                    
+                    // Live UI Routing
                     liveAnalyser = audioCtx.createAnalyser(); liveAnalyser.fftSize = 512;
                     micSource.connect(liveAnalyser); 
                     liveDataArray = new Uint8Array(liveAnalyser.frequencyBinCount);
 
-                    mediaRec = new MediaRecorder(stream); audioChunks = [];
-                    mediaRec.ondataavailable = e => audioChunks.push(e.data);
+                    mediaRec = new MediaRecorder(stream); 
+                    audioChunks = [];
                     
+                    mediaRec.ondataavailable = e => { if(e.data.size > 0) audioChunks.push(e.data); };
+                    
+                    // THE CRITICAL FIX: The closure locks the trackId securely in memory.
                     mediaRec.onstop = async () => {
-                        const arrayBuffer = await (new Blob(audioChunks)).arrayBuffer();
-                        const audioBuf = await audioCtx.decodeAudioData(arrayBuffer);
-                        
-                        vocalClips.push({ 
-                            id: `clip-${clipIdCounter++}`, buffer: audioBuf, trackId: activeRecTrack, 
-                            startTime: punchInTargetTime, // Absolute position on the timeline
-                            duration: audioBuf.duration, sourceNode: null
-                        });
-                        stream.getTracks().forEach(t => t.stop());
-                        renderStaticClips();
+                        try {
+                            const blob = new Blob(audioChunks, { type: mediaRec.mimeType || 'audio/webm' });
+                            const arrayBuffer = await blob.arrayBuffer();
+                            const audioBuf = await audioCtx.decodeAudioData(arrayBuffer);
+                            
+                            // Explicitly push the clip using the locked trackId
+                            vocalClips.push({ 
+                                id: `clip-${clipIdCounter++}`, 
+                                buffer: audioBuf, 
+                                trackId: trackId, 
+                                startTime: punchInTargetTime,
+                                duration: audioBuf.duration, 
+                                sourceNode: null
+                            });
+                            
+                            stream.getTracks().forEach(t => t.stop());
+                            renderStaticClips(); // Render immediately upon success
+                        } catch (error) {
+                            console.error("Audio Decoding Failed:", error);
+                            alert("There was an error saving your recording. Please try again.");
+                        }
                     };
 
                     activeRecTrack = trackId;
 
-                    // Start full playback
-                    isSoloing = false;
-                    startPlayback();
+                    // Execute recording context
+                    startPlayback('FULL');
 
                     if (punchInTargetTime === 0) {
-                        // Overwrite: Start instantly
+                        // Instant Record
                         mediaRec.start();
                         isRecording = true;
                         recordingStartTime = audioCtx.currentTime;
                         createLiveBlock(trackId, 0);
                         btnNew.classList.add('is-recording'); btnNew.innerText = '⏹ Stop';
                     } else {
-                        // Append: Wait for the playhead to reach the punch-in time
+                        // Wait to Punch-In
                         isWaitingToPunchIn = true;
                         btnAppend.classList.add('is-waiting'); btnAppend.innerText = '⏳ Wait...';
                     }
 
-                } catch (e) { alert("Microphone needed to record vocals."); }
+                } catch (e) { alert("Microphone access is required to record vocals."); }
             };
 
             function createLiveBlock(trackId, startOffsetTime) {
@@ -436,11 +529,13 @@
                 liveCanvasCtx = activeRecordingBlock.querySelector('canvas').getContext('2d');
             }
 
-            // --- REAL-TIME VISUALS & SCALING ---
+            // ==========================================
+            // 7. REAL-TIME VISUALS & SCALING
+            // ==========================================
             function updateVisuals() {
                 if (!audioCtx) return;
                 
-                // Dynamically zoom out if audio gets long
+                // Dynamically scale UI
                 let maxRequiredDuration = getLoopDuration() * 4; 
                 vocalClips.forEach(c => { if (c.startTime + c.duration > maxRequiredDuration) maxRequiredDuration = c.startTime + c.duration; });
                 
@@ -450,34 +545,34 @@
                 }
                 projectDisplayDuration = maxRequiredDuration;
 
-                if (isPlaying) {
+                if (playState !== 'STOPPED') {
                     const currentAbsTime = audioCtx.currentTime - globalStartTime;
                     
-                    // Stop playing if we reach the absolute end of all audio (and aren't recording)
-                    if (!isRecording && !isWaitingToPunchIn && currentAbsTime > projectDisplayDuration + 0.5) {
+                    // Stop automatically if playing an empty space past the end
+                    if (!isRecording && !isWaitingToPunchIn && playState !== 'BEAT_ONLY' && currentAbsTime > projectDisplayDuration + 0.5) {
                         stopPlayback();
                         return;
                     }
 
-                    const currentDrumOffset = audioCtx.currentTime - drumLoopStartOffset;
-                    
-                    const beatPct = (currentDrumOffset / getLoopDuration()) * 100;
+                    // --- THE FIX: Perfectly Looping Beat Playhead ---
+                    const beatPct = ((currentAbsTime % getLoopDuration()) / getLoopDuration()) * 100;
                     const bPh = document.getElementById('playhead-beat');
-                    
                     if (bPh) { 
-                        bPh.style.display = isSoloing ? 'none' : 'block'; 
+                        bPh.style.display = playState === 'SOLO' ? 'none' : 'block'; 
                         bPh.style.left = `${beatPct}%`; 
                     }
 
-                    // VOCAL PLAYHEAD: Smooth, absolute movement (Does not reset every bar)
+                    // --- Smooth Absolute Voice Playhead ---
                     let vocalPct = (currentAbsTime / projectDisplayDuration) * 100;
                     if (vocalPct > 100) vocalPct = 100;
                     
                     document.querySelectorAll('.playhead-vocal').forEach(ph => {
-                        ph.style.display = 'block'; ph.style.left = `${vocalPct}%`;
+                        // Only show on relevant tracks (or all if FULL)
+                        ph.style.display = playState === 'BEAT_ONLY' ? 'none' : 'block';
+                        ph.style.left = `${vocalPct}%`;
                     });
 
-                    // PUNCH-IN LOGIC
+                    // --- PUNCH IN LOGIC ---
                     if (isWaitingToPunchIn && currentAbsTime >= punchInTargetTime) {
                         isWaitingToPunchIn = false;
                         mediaRec.start();
@@ -486,12 +581,14 @@
                         createLiveBlock(activeRecTrack, currentAbsTime);
                         
                         const btnAppend = document.getElementById(`rec-btn-append-${activeRecTrack}`);
-                        btnAppend.classList.remove('is-waiting');
-                        btnAppend.classList.add('is-recording');
-                        btnAppend.innerText = '⏹ Stop Rec';
+                        if(btnAppend) {
+                            btnAppend.classList.remove('is-waiting');
+                            btnAppend.classList.add('is-recording');
+                            btnAppend.innerText = '⏹ Stop Rec';
+                        }
                     }
 
-                    // DRAW LIVE RECORDING WAVES
+                    // --- DRAW LIVE WAVES ---
                     if (isRecording && activeRecordingBlock) {
                         const recElapsed = audioCtx.currentTime - recordingStartTime;
                         const startPct = (punchInTargetTime / projectDisplayDuration) * 100;
@@ -500,7 +597,6 @@
                         activeRecordingBlock.style.left = `${startPct}%`;
                         activeRecordingBlock.style.width = `${widthPct}%`;
                         drawOscilloscope();
-                        renderStaticClips(); // Re-render surrounding clips so they scale correctly
                     }
                 }
                 requestAnimationFrame(updateVisuals);
@@ -522,7 +618,9 @@
                 liveCanvasCtx.stroke();
             }
 
-            // --- STATIC CLIP RENDER & EDITING ---
+            // ==========================================
+            // 8. STATIC CLIP RENDERING & EDITING
+            // ==========================================
             function renderStaticClips() {
                 document.querySelectorAll('.audio-clip:not(.recording-block)').forEach(el => el.remove());
                 
@@ -544,6 +642,7 @@
                     clipEl.addEventListener('mousedown', handleClipDrag);
                     clipEl.addEventListener('dblclick', (e) => handleClipSplit(e, clip));
 
+                    // Render Waveform Canvas
                     const ctx = clipEl.querySelector('canvas').getContext('2d');
                     const data = clip.buffer.getChannelData(0);
                     ctx.fillStyle = 'rgba(255,255,255,0.8)';
@@ -559,6 +658,8 @@
             function handleClipDrag(e) {
                 e.preventDefault();
                 let clip = vocalClips.find(c => c.id === e.target.closest('.audio-clip').id);
+                if(!clip) return;
+                
                 const clipEl = document.getElementById(clip.id);
                 const startMouseX = e.clientX;
                 const startClipTime = clip.startTime;
@@ -582,7 +683,6 @@
                         
                         clip.trackId = targetTrackId;
                         clip.startTime = newTime;
-                        
                         clipEl.style.left = `${(newTime / projectDisplayDuration) * 100}%`;
                         if(clipEl.parentElement !== foundTrackEl) foundTrackEl.appendChild(clipEl);
                     }
@@ -624,80 +724,24 @@
                 renderStaticClips();
             };
 
-            // --- PLAYBACK CONTROLS ---
-            function startPlayback() {
-                currentDrumStep = 0;
-                globalStartTime = audioCtx.currentTime + 0.05;
-                drumLoopStartOffset = globalStartTime;
-                nextDrumTime = globalStartTime;
+            // ==========================================
+            // 9. PLAYBACK CONTROLS
+            // ==========================================
+            function startPlayback(mode, targetTrackId = null) {
+                initAudio();
                 
-                vocalClips.forEach(c => {
-                    const trackSettings = vocalTracks.find(t => t.id === c.trackId);
-                    const source = audioCtx.createBufferSource();
-                    source.buffer = c.buffer;
-                    source.playbackRate.value = trackSettings.pitch;
-                    source.connect(trackSettings.gainNode);
-                    source.start(globalStartTime + c.startTime);
-                    c.sourceNode = source;
-                });
-                
-                isPlaying = true;
-                scheduler();
-                document.getElementById('masterPlayBtn').innerText = "⏸ Stop Demo"; 
-                document.getElementById('masterPlayBtn').classList.add('playing');
-            }
-
-            function stopPlayback() {
+                // Stop anything currently playing
                 window.clearTimeout(timerID); 
                 vocalClips.forEach(c => { if(c.sourceNode) { try{c.sourceNode.stop();}catch(e){} } });
-                isPlaying = false;
                 
-                document.getElementById('masterPlayBtn').innerText = "▶ Play Full Demo"; 
-                document.getElementById('masterPlayBtn').classList.remove('playing');
-                document.getElementById('playhead-beat').style.display = 'none';
-                document.querySelectorAll('.playhead-vocal').forEach(ph => ph.style.display = 'none');
-                
-                if (isRecording || isWaitingToPunchIn) {
-                    if (mediaRec && mediaRec.state === "recording") mediaRec.stop();
-                    isRecording = false;
-                    isWaitingToPunchIn = false;
-                    
-                    if (activeRecordingBlock) activeRecordingBlock.remove();
-                    
-                    // Reset all buttons
-                    document.querySelectorAll('.btn-rec').forEach(btn => {
-                        btn.classList.remove('is-recording'); btn.innerText = '🔴 Overwrite';
-                    });
-                    document.querySelectorAll('.btn-rec-append').forEach(btn => {
-                        btn.classList.remove('is-recording', 'is-waiting'); btn.innerText = '➕ Append';
-                    });
-                    
-                    activeRecTrack = null;
-                }
-            }
-
-            document.getElementById('masterPlayBtn').addEventListener('click', (e) => {
-                initAudio();
-                if(isPlaying || isRecording || isWaitingToPunchIn) {
-                    stopPlayback();
-                } else {
-                    isSoloing = false;
-                    startPlayback();
-                }
-            });
-
-            window.playSolo = (trackId) => {
-                initAudio();
-                stopPlayback();
-                
-                isSoloing = true;
+                playState = mode;
                 currentDrumStep = 0;
                 globalStartTime = audioCtx.currentTime + 0.05;
-                drumLoopStartOffset = globalStartTime;
                 nextDrumTime = globalStartTime;
-
+                
+                // Play logic based on the requested mode
                 vocalClips.forEach(c => {
-                    if (c.trackId === trackId) {
+                    if (playState === 'FULL' || (playState === 'SOLO' && c.trackId === targetTrackId)) {
                         const trackSettings = vocalTracks.find(t => t.id === c.trackId);
                         const source = audioCtx.createBufferSource();
                         source.buffer = c.buffer;
@@ -707,24 +751,81 @@
                         c.sourceNode = source;
                     }
                 });
-
-                isPlaying = true;
+                
                 scheduler();
-                document.getElementById('masterPlayBtn').innerText = "⏸ Stop Demo"; 
-                document.getElementById('masterPlayBtn').classList.add('playing');
+            }
+
+            function stopPlayback() {
+                window.clearTimeout(timerID); 
+                vocalClips.forEach(c => { if(c.sourceNode) { try{c.sourceNode.stop();}catch(e){} } });
+                
+                // Stop Recording gracefully
+                if (isRecording || isWaitingToPunchIn) {
+                    if (mediaRec && mediaRec.state !== 'inactive') mediaRec.stop();
+                    isRecording = false;
+                    isWaitingToPunchIn = false;
+                    if (activeRecordingBlock) activeRecordingBlock.remove();
+                    activeRecTrack = null;
+                }
+
+                playState = 'STOPPED';
+                
+                // Reset Top UI
+                document.getElementById('btnPlayFull').innerText = "▶ Play Full Demo"; 
+                document.getElementById('btnPlayFull').classList.remove('playing');
+                document.getElementById('btnPlayBeat').innerText = "🥁 Play Beat Only"; 
+                document.getElementById('btnPlayBeat').classList.remove('playing');
+                
+                // Reset Track UI
+                document.querySelectorAll('.btn-rec-overwrite').forEach(btn => { btn.classList.remove('is-recording'); btn.innerText = '🔴 Overwrite'; });
+                document.querySelectorAll('.btn-rec-append').forEach(btn => { btn.classList.remove('is-recording', 'is-waiting'); btn.innerText = '➕ Append'; });
+                
+                document.getElementById('playhead-beat').style.display = 'none';
+                document.querySelectorAll('.playhead-vocal').forEach(ph => ph.style.display = 'none');
+            }
+
+            // Top Buttons
+            document.getElementById('btnPlayFull').addEventListener('click', () => {
+                if(playState !== 'STOPPED') stopPlayback();
+                else {
+                    startPlayback('FULL');
+                    document.getElementById('btnPlayFull').innerText = "⏸ Stop Demo";
+                    document.getElementById('btnPlayFull').classList.add('playing');
+                }
+            });
+
+            document.getElementById('btnPlayBeat').addEventListener('click', () => {
+                if(playState !== 'STOPPED') stopPlayback();
+                else {
+                    startPlayback('BEAT_ONLY');
+                    document.getElementById('btnPlayBeat').innerText = "⏸ Stop Beat";
+                    document.getElementById('btnPlayBeat').classList.add('playing');
+                }
+            });
+
+            // Track Solo Button
+            window.playSolo = (trackId) => {
+                if(playState === 'SOLO') stopPlayback();
+                else {
+                    startPlayback('SOLO', trackId);
+                    document.getElementById('btnPlayFull').innerText = "⏸ Stop Solo";
+                    document.getElementById('btnPlayFull').classList.add('playing');
+                }
             };
 
             document.getElementById('bpmSlider').addEventListener('input', (e) => {
                 tempo = e.target.value; document.getElementById('bpmVal').innerText = tempo;
-                if(!isPlaying) renderStaticClips(); 
+                if(playState === 'STOPPED') renderStaticClips(); 
             });
 
-            // --- PRO STUDIO EXPORT ---
-            document.getElementById('downloadBtn').addEventListener('click', async (e) => {
+            // ==========================================
+            // 10. EXPORT SYSTEM (.WAV Bounce)
+            // ==========================================
+            document.getElementById('btnDownload').addEventListener('click', async (e) => {
                 initAudio();
                 const btn = e.target;
                 const originalText = btn.innerText;
-                btn.innerText = "⏳ Bouncing Mix..."; btn.disabled = true;
+                btn.innerText = "⏳ Processing..."; btn.disabled = true;
 
                 let maxDuration = getLoopDuration(); 
                 vocalClips.forEach(c => { if (c.startTime + c.duration > maxDuration) maxDuration = c.startTime + c.duration; });
@@ -796,7 +897,6 @@
                 return new Blob([out], { type: "audio/wav" });
             }
 
-            // Init
             buildInterface();
         });
     </script>
