@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BeatBox - Pro Demo Creator V4</title>
+    <title>BeatBox - Pro Demo Creator V5</title>
     <style>
         /* --- CORE STYLING & DAW THEME --- */
         :root {
@@ -82,7 +82,7 @@
 
         @keyframes pulse { 50% { opacity: 0.6; } }
 
-        /* --- DRUM SEQUENCER (COMPACT) --- */
+        /* --- DRUM SEQUENCER --- */
         .drum-inner { min-width: 100%; }
         .drum-grid { display: grid; gap: 2px; height: 30px; width: 100%; }
         .step { background: #21262d; border-radius: 3px; cursor: pointer; transition: 0.1s; border: 1px solid #161b22; }
@@ -120,7 +120,7 @@
         <header>
             <div class="logo">
                 <h1>BEATBOX</h1>
-                <span>Pro Studio V4</span>
+                <span>Pro Studio V5</span>
             </div>
             <a href="https://buymeacoffee.com/" target="_blank" class="kofi-btn">☕ Buy Me a Coffee</a>
         </header>
@@ -129,7 +129,7 @@
             <button id="btnPlayFull" class="btn-master btn-master-full">▶ Play Full Track</button>
             <div class="toolbar-group">
                 <div class="slider-control">
-                    <span>🥁 Drum Master Vol</span>
+                    <span>🥁 Master Vol</span>
                     <input type="range" id="masterDrumVol" min="0" max="2" step="0.05" value="1">
                 </div>
                 <div class="slider-control" style="margin-left: 20px;">
@@ -158,8 +158,8 @@
         <div class="panel">
             <h2 class="section-title">2. Vocal Studio</h2>
             <div class="instructions">
-                <strong>Editing:</strong> <b>Double-click</b> a blue clip to cut it. <b>Drag</b> clips across tracks. Hold <b>Ctrl + Scroll</b> to zoom.<br>
-                <strong>Beat Sync:</strong> Light vertical bars on the vocal grid show where your Kick and Snare are hitting. Your voice pitch stays normal regardless of BPM.
+                <strong>Recording:</strong> The button says <b>🔴 Record</b> if the track is empty. It turns to <b>Overwrite</b> to warn you if a clip already exists on that track.<br>
+                <strong>Beat Sync:</strong> Light vertical bars on the vocal grid show exactly where your Kick and Snare are hitting.
             </div>
             <div id="vocal-container"></div>
             <button class="btn-add-track" onclick="addVocalTrack()">➕ Add Vocal Track</button>
@@ -195,7 +195,6 @@
             // ==========================================
             // 2. DATA STRUCTURES
             // ==========================================
-            // Pre-fill 32 steps so data isn't lost when switching views
             let drumTracks = [
                 { id: 'hihat', name: 'Hi-Hat', pitch: 1.0, volume: 1.0, reverb: 0.0, inputGain: null, reverbMix: null, convolver: null, 
                   pattern: [true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false] },
@@ -224,11 +223,9 @@
             const vocalContainer = document.getElementById('vocal-container');
 
             function buildInterface() {
-                // Build Drums
                 beatContainer.innerHTML = '';
                 drumTracks.forEach((drum) => {
                     const row = document.createElement('div'); row.className = 'track-row';
-                    
                     row.innerHTML = `
                         <div class="track-header">
                             <span style="font-weight:bold; font-size:13px; color:var(--primary);">${drum.name}</span>
@@ -257,16 +254,14 @@
                     beatContainer.appendChild(row);
                 });
 
-                // Build Vocals
                 vocalContainer.innerHTML = '';
                 vocalTracks.forEach((track, index) => {
                     const row = document.createElement('div'); row.className = 'track-row';
-                    
                     row.innerHTML = `
                         <div class="track-header">
                             <span style="font-weight:bold; font-size:13px; color:white;">Vocal Track ${index + 1}</span>
                             <div class="btn-group">
-                                <button class="btn-action btn-rec-overwrite" onclick="startRecording('${track.id}', false)" id="rec-btn-new-${track.id}">🔴 Overwrt</button>
+                                <button class="btn-action btn-rec-overwrite" onclick="startRecording('${track.id}', false)" id="rec-btn-new-${track.id}">🔴 Record</button>
                                 <button class="btn-action btn-rec-append" onclick="startRecording('${track.id}', true)" id="rec-btn-append-${track.id}">➕ Append</button>
                             </div>
                             <div class="btn-group">
@@ -289,7 +284,6 @@
                     `;
                     vocalContainer.appendChild(row);
 
-                    // Add Wheel Zoom Listener
                     const viewport = row.querySelector('.track-viewport');
                     viewport.addEventListener('wheel', (e) => {
                         if (e.ctrlKey) {
@@ -300,7 +294,7 @@
                     }, {passive: false});
                 });
                 
-                renderStaticClips(); // Re-render clips after UI rebuild
+                renderStaticClips(); 
             }
 
             window.addVocalTrack = () => {
@@ -316,7 +310,7 @@
             });
 
             // ==========================================
-            // 4. TRUE REVERB & AUDIO ROUTING
+            // 4. AUDIO ROUTING
             // ==========================================
             function getLoopDuration() { return (60.0 / tempo) * 0.25 * STEPS; }
 
@@ -335,10 +329,11 @@
             function initAudio() {
                 if (!audioCtx) {
                     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                    masterGain = audioCtx.createGain(); masterGain.connect(audioCtx.destination);
+                    masterGain = audioCtx.createGain(); 
+                    masterGain.gain.value = 0.9; // Prevent clipping
+                    masterGain.connect(audioCtx.destination);
                     mixDest = audioCtx.createMediaStreamDestination(); masterGain.connect(mixDest);
                     
-                    // Master Drum Volume Bus
                     drumMasterGain = audioCtx.createGain();
                     drumMasterGain.gain.value = document.getElementById('masterDrumVol').value;
                     drumMasterGain.connect(masterGain);
@@ -360,10 +355,10 @@
                     track.convolver = audioCtx.createConvolver();
                     track.convolver.buffer = sharedReverbBuffer;
 
-                    track.inputGain.connect(drumMasterGain); // Dry routes to Drum Master
+                    track.inputGain.connect(drumMasterGain); 
                     track.inputGain.connect(track.convolver);
                     track.convolver.connect(track.reverbMix);
-                    track.reverbMix.connect(drumMasterGain); // Wet routes to Drum Master
+                    track.reverbMix.connect(drumMasterGain); 
 
                     applyDrumFX(track);
                 });
@@ -384,7 +379,6 @@
 
                     track.delayNode.connect(track.delayFeedback); track.delayFeedback.connect(track.delayNode);
 
-                    // Vocals route directly to Main Master
                     track.inputGain.connect(masterGain); 
                     track.inputGain.connect(track.convolver);
                     track.convolver.connect(track.reverbMix);
@@ -424,7 +418,6 @@
                 if (param === 'reverb') t.reverb = val; if (param === 'echo') t.echo = val;
                 applyVoxFX(t);
                 
-                // Live Pitch Update if playing
                 if (playState !== 'STOPPED' && audioCtx) {
                     vocalClips.forEach(c => {
                         if (c.trackId === id && c.sourceNode) c.sourceNode.playbackRate.value = t.pitch;
@@ -599,21 +592,19 @@
                     const ctx = canvas.getContext('2d');
                     ctx.clearRect(0,0, canvas.width, canvas.height);
                     
-                    // Draw Beat Grid based on Kick and Snare patterns
                     for (let i = 0; i < STEPS; i++) {
                         const x = i * beatSecs * PPS;
                         if (x > canvas.width) break;
 
                         if (kickTrack && kickTrack.pattern[i]) {
-                            ctx.fillStyle = 'rgba(255, 123, 114, 0.2)'; // Faint red for kick
+                            ctx.fillStyle = 'rgba(255, 123, 114, 0.2)'; 
                             ctx.fillRect(x, 0, 4, canvas.height);
                         }
                         if (snareTrack && snareTrack.pattern[i]) {
-                            ctx.fillStyle = 'rgba(210, 168, 255, 0.2)'; // Faint purple for snare
+                            ctx.fillStyle = 'rgba(210, 168, 255, 0.2)'; 
                             ctx.fillRect(x, 0, 4, canvas.height);
                         }
                         
-                        // Thin line for every beat regardless
                         ctx.beginPath();
                         ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
                         ctx.lineWidth = 1;
@@ -647,7 +638,6 @@
                         stopPlayback(); return;
                     }
 
-                    // --- PERFECT BEAT PLAYHEAD ---
                     const loopDur = getLoopDuration();
                     const currentDrumOffset = audioCtx.currentTime - drumLoopStartOffset;
                     const beatCycleTime = currentDrumOffset % loopDur;
@@ -661,7 +651,6 @@
                         }
                     });
 
-                    // --- VOCAL PLAYHEAD (Absolute Pixels) ---
                     const vocalPx = currentAbsTime * PPS;
                     document.querySelectorAll('.playhead-vocal').forEach(ph => {
                         ph.style.display = playState === 'BEAT_ONLY' ? 'none' : 'block';
@@ -678,7 +667,7 @@
                         mediaRec.start(); isRecording = true; recordingStartTime = audioCtx.currentTime;
                         createLiveBlock(activeRecTrack, currentAbsTime);
                         const btnAppend = document.getElementById(`rec-btn-append-${activeRecTrack}`);
-                        if(btnAppend) { btnAppend.classList.remove('is-waiting'); btnAppend.classList.add('is-recording'); btnAppend.innerText = '⏹ Stop Rec'; }
+                        if(btnAppend) { btnAppend.classList.remove('is-waiting'); btnAppend.classList.add('is-recording'); btnAppend.innerText = '⏹ Stop'; }
                     }
 
                     if (isRecording && activeRecordingBlock) {
@@ -709,7 +698,7 @@
             }
 
             // ==========================================
-            // 8. CLIP RENDERING & EDITING
+            // 8. CLIP RENDERING & UI DYNAMICS
             // ==========================================
             function renderStaticClips() {
                 document.querySelectorAll('.audio-clip:not(.recording-block)').forEach(el => el.remove());
@@ -743,6 +732,18 @@
                     trackEl.appendChild(clipEl);
                 });
                 drawSyncGrids();
+                updateRecordButtons();
+            }
+
+            // The core fix to dynamically switch Record/Overwrite text
+            function updateRecordButtons() {
+                vocalTracks.forEach(track => {
+                    const btnNew = document.getElementById(`rec-btn-new-${track.id}`);
+                    if (btnNew && !btnNew.classList.contains('is-recording')) {
+                        const hasClips = vocalClips.some(c => c.trackId === track.id);
+                        btnNew.innerText = hasClips ? '🔴 Overwrite' : '🔴 Record';
+                    }
+                });
             }
 
             function handleClipDrag(e) {
@@ -878,8 +879,10 @@
                 playState = 'STOPPED';
                 document.getElementById('btnPlayFull').innerText = "▶ Play Full Track"; document.getElementById('btnPlayFull').classList.remove('playing');
                 document.getElementById('btnPlayBeat').innerText = "🥁 Play Beat Only"; document.getElementById('btnPlayBeat').classList.remove('playing');
-                document.querySelectorAll('.btn-rec-overwrite').forEach(btn => { btn.classList.remove('is-recording'); btn.innerText = '🔴 Overwrt'; });
+                
                 document.querySelectorAll('.btn-rec-append').forEach(btn => { btn.classList.remove('is-recording', 'is-waiting'); btn.innerText = '➕ Append'; });
+                document.querySelectorAll('.btn-rec-overwrite').forEach(btn => { btn.classList.remove('is-recording'); });
+                updateRecordButtons(); // Safely reset Overwrite/Record text
                 
                 document.querySelectorAll('.playhead-beat').forEach(ph => ph.style.display = 'none');
                 document.querySelectorAll('.playhead-vocal').forEach(ph => ph.style.display = 'none');
