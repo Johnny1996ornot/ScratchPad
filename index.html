@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BeatBox - Pro Demo Creator V7</title>
+    <title>BeatBox - Pro Demo Creator V8</title>
     <style>
         /* --- CORE STYLING & DAW THEME --- */
         :root {
@@ -12,6 +12,7 @@
             --warning: #d29922; --text-main: #c9d1d9; --text-muted: #8b949e;
             --drum-kick: #ff7b72; --drum-snare: #d2a8ff; --drum-hihat: #7ee787;
             --drum-tom: #f0883e; --drum-clap: #79c0ff;
+            --chord-color: #3fb950;
             --selected: #e3b341;
         }
 
@@ -86,6 +87,8 @@
         .btn-rec-append.is-waiting { background: var(--warning); color: #000; animation: pulse 1s infinite; }
 
         .instrument-select { width: 100%; background: #0d1117; color: var(--primary); border: 1px solid var(--border); border-radius: 4px; padding: 4px; font-weight: bold; font-size: 12px; margin-bottom: 4px; outline: none; cursor: pointer;}
+        .instrument-select optgroup { color: var(--text-muted); font-style: normal; }
+        .instrument-select option { color: white; }
 
         @keyframes pulse { 50% { opacity: 0.6; } }
 
@@ -102,6 +105,9 @@
         .step.active[data-type="hihat"] { background: var(--drum-hihat); box-shadow: 0 0 8px rgba(126,231,135,0.3); }
         .step.active[data-type="tom"] { background: var(--drum-tom); box-shadow: 0 0 8px rgba(240,136,62,0.3); }
         .step.active[data-type="clap"] { background: var(--drum-clap); box-shadow: 0 0 8px rgba(121,192,255,0.3); }
+        
+        /* Piano Chords Active State */
+        .step.active[data-type^="chord-"] { background: var(--chord-color); box-shadow: 0 0 8px rgba(63, 185, 80, 0.4); }
 
         /* --- VOCAL TIMELINE --- */
         .vocal-timeline-inner { height: 75px; position: relative; background: #090c10; }
@@ -129,7 +135,7 @@
         <header>
             <div class="logo">
                 <h1>BEATBOX</h1>
-                <span>Pro Studio V7</span>
+                <span>Pro Studio V8 - Keys & Chords</span>
             </div>
             <a href="https://buymeacoffee.com/" target="_blank" class="kofi-btn">☕ Buy Me a Coffee</a>
         </header>
@@ -151,7 +157,7 @@
 
         <div class="panel">
             <div class="section-header">
-                <h2 class="section-title">1. Dynamic Drum Rack</h2>
+                <h2 class="section-title">1. Dynamic Rack (Drums & Piano)</h2>
                 <div class="header-tools">
                     <select id="stepSelector" class="step-select">
                         <option value="8">8 Steps</option>
@@ -162,10 +168,10 @@
                 </div>
             </div>
             <div class="instructions">
-                <strong>Customize:</strong> Use the dropdown menu on any drum track to change the instrument. Add as many tracks as you want to layer sounds or create complex rhythms.
+                <strong>New Piano Chords:</strong> You can now select acoustic piano chords from the track dropdown. Add multiple tracks to build a full chord progression!
             </div>
             <div id="beat-container"></div>
-            <button class="btn-add-drum" onclick="addDrumTrack()">➕ Add Drum Track</button>
+            <button class="btn-add-drum" onclick="addDrumTrack()">➕ Add Track (Drum / Keys)</button>
         </div>
 
         <div class="panel">
@@ -201,12 +207,11 @@
             let selectedClipId = null;
             let clipboardData = null;
             
-            // Counters for IDs
             let drumIdCounter = 4;
             let voxIdCounter = 3;
             
             // ==========================================
-            // 2. DATA STRUCTURES (Now Dynamic Drums)
+            // 2. DATA STRUCTURES
             // ==========================================
             let drumTracks = [
                 { id: 'drum-1', type: 'hihat', pitch: 1.0, volume: 1.0, reverb: 0.0, inputGain: null, reverbMix: null, convolver: null, 
@@ -240,9 +245,23 @@
                 drumTracks.forEach((drum) => {
                     const row = document.createElement('div'); row.className = 'track-row';
                     
-                    const instOptions = ['kick', 'snare', 'hihat', 'tom', 'clap'].map(type => 
-                        `<option value="${type}" ${drum.type === type ? 'selected' : ''}>${type.toUpperCase()}</option>`
-                    ).join('');
+                    const instOptions = `
+                        <optgroup label="🥁 Drum Kit">
+                            <option value="kick" ${drum.type === 'kick' ? 'selected' : ''}>Kick</option>
+                            <option value="snare" ${drum.type === 'snare' ? 'selected' : ''}>Snare</option>
+                            <option value="hihat" ${drum.type === 'hihat' ? 'selected' : ''}>Hi-Hat</option>
+                            <option value="tom" ${drum.type === 'tom' ? 'selected' : ''}>Tom</option>
+                            <option value="clap" ${drum.type === 'clap' ? 'selected' : ''}>Clap</option>
+                        </optgroup>
+                        <optgroup label="🎹 Piano Chords">
+                            <option value="chord-C" ${drum.type === 'chord-C' ? 'selected' : ''}>C Major Chord</option>
+                            <option value="chord-Dm" ${drum.type === 'chord-Dm' ? 'selected' : ''}>D Minor Chord</option>
+                            <option value="chord-Em" ${drum.type === 'chord-Em' ? 'selected' : ''}>E Minor Chord</option>
+                            <option value="chord-F" ${drum.type === 'chord-F' ? 'selected' : ''}>F Major Chord</option>
+                            <option value="chord-G" ${drum.type === 'chord-G' ? 'selected' : ''}>G Major Chord</option>
+                            <option value="chord-Am" ${drum.type === 'chord-Am' ? 'selected' : ''}>A Minor Chord</option>
+                        </optgroup>
+                    `;
 
                     row.innerHTML = `
                         <div class="track-header">
@@ -267,11 +286,11 @@
                     for (let i = 0; i < STEPS; i++) {
                         const step = document.createElement('div');
                         step.className = `step ${drum.pattern[i] ? 'active' : ''}`;
-                        step.dataset.type = drum.type; // Color depends on type
+                        step.dataset.type = drum.type; 
                         step.onclick = () => { 
                             drum.pattern[i] = !drum.pattern[i]; 
                             step.classList.toggle('active'); 
-                            if(audioCtx && drum.pattern[i]) playDrumSound(drum, audioCtx.currentTime); // Preview sound
+                            if(audioCtx && drum.pattern[i]) playDrumSound(drum, audioCtx.currentTime); 
                             drawSyncGrids(); 
                         };
                         grid.appendChild(step);
@@ -342,7 +361,7 @@
                 if (drum) {
                     drum.type = newType;
                     buildInterface();
-                    if(audioCtx) playDrumSound(drum, audioCtx.currentTime); // Preview
+                    if(audioCtx) playDrumSound(drum, audioCtx.currentTime); 
                 }
             };
 
@@ -491,10 +510,49 @@
             });
 
             // ==========================================
-            // 5. SYNTHESIS (NEW TYPES ADDED)
+            // 5. SYNTHESIS (NEW PIANO CHORDS)
             // ==========================================
             function playDrumSound(track, time, context = audioCtx, destination = drumMasterGain) {
                 let targetDest = (context === audioCtx && track.inputGain) ? track.inputGain : destination;
+
+                if (track.type.startsWith('chord-')) {
+                    const chordMap = {
+                        'chord-C': [261.63, 329.63, 392.00], 
+                        'chord-Dm': [293.66, 349.23, 440.00], 
+                        'chord-Em': [329.63, 392.00, 493.88], 
+                        'chord-F': [349.23, 440.00, 523.25], 
+                        'chord-G': [392.00, 493.88, 587.33], 
+                        'chord-Am': [440.00, 523.25, 659.25] 
+                    };
+                    const notes = chordMap[track.type] || chordMap['chord-C'];
+                    const duration = 0.6; // Longer decay for piano
+                    
+                    notes.forEach(freq => {
+                        const osc = context.createOscillator();
+                        const osc2 = context.createOscillator(); // Layered sound
+                        const gain = context.createGain();
+                        
+                        osc.type = 'triangle';
+                        osc2.type = 'sine';
+                        
+                        osc.frequency.setValueAtTime(freq * track.pitch, time);
+                        osc2.frequency.setValueAtTime((freq * 2) * track.pitch, time); // Octave up
+                        
+                        // Per-note volume to prevent clipping
+                        const vol = 0.7 / notes.length; 
+                        gain.gain.setValueAtTime(0, time);
+                        gain.gain.linearRampToValueAtTime(vol, time + 0.02); // Quick attack
+                        gain.gain.exponentialRampToValueAtTime(0.001, time + duration); // Smooth fade
+                        
+                        osc.connect(gain);
+                        osc2.connect(gain);
+                        gain.connect(targetDest);
+                        
+                        osc.start(time); osc.stop(time + duration);
+                        osc2.start(time); osc2.stop(time + duration);
+                    });
+                    return;
+                }
 
                 if (track.type === 'kick') {
                     const osc = context.createOscillator(), gain = context.createGain();
@@ -543,19 +601,15 @@
                     const filter = context.createBiquadFilter(), gain = context.createGain();
                     filter.type = 'bandpass'; filter.frequency.value = 1500 * track.pitch; filter.Q.value = 1.5;
                     gain.connect(targetDest);
-                    
-                    // Create three rapid noise bursts for a realistic clap
                     [0, 0.015, 0.03].forEach(delay => {
                         const noise = context.createBufferSource();
                         let nBuffer = context.createBuffer(1, context.sampleRate * 0.1, context.sampleRate);
                         let nData = nBuffer.getChannelData(0);
                         for (let i = 0; i < nData.length; i++) nData[i] = Math.random() * 2 - 1;
                         noise.buffer = nBuffer;
-                        
                         const bGain = context.createGain();
                         bGain.gain.setValueAtTime(0.8, time + delay);
                         bGain.gain.exponentialRampToValueAtTime(0.01, time + delay + 0.1);
-                        
                         noise.connect(filter).connect(bGain).connect(gain);
                         noise.start(time + delay); noise.stop(time + delay + 0.1);
                     });
@@ -577,7 +631,7 @@
             }
 
             // ==========================================
-            // 6. RECORDING SYSTEM
+            // 6. RECORDING SYSTEM (FIXED SILENT BLOCK)
             // ==========================================
             window.startRecording = async (trackId, isAppend) => {
                 const btnNew = document.getElementById(`rec-btn-new-${trackId}`);
@@ -605,13 +659,18 @@
                     micSource.connect(liveAnalyser); 
                     liveDataArray = new Uint8Array(liveAnalyser.frequencyBinCount);
 
-                    mediaRec = new MediaRecorder(stream); 
+                    let options = { mimeType: 'audio/webm' };
+                    if (!MediaRecorder.isTypeSupported('audio/webm')) {
+                        options = { mimeType: 'audio/mp4' };
+                    }
+
+                    mediaRec = new MediaRecorder(stream, options); 
                     audioChunks = [];
                     mediaRec.ondataavailable = e => { if(e.data.size > 0) audioChunks.push(e.data); };
                     
                     mediaRec.onstop = async () => {
                         try {
-                            const blob = new Blob(audioChunks, { type: mediaRec.mimeType || 'audio/webm' });
+                            const blob = new Blob(audioChunks, { type: mediaRec.mimeType || options.mimeType });
                             const arrayBuffer = await blob.arrayBuffer();
                             const audioBuf = await audioCtx.decodeAudioData(arrayBuffer);
                             
@@ -621,7 +680,7 @@
                             });
                             stream.getTracks().forEach(t => t.stop());
                             renderStaticClips(); 
-                        } catch (error) {}
+                        } catch (error) { console.error("Decode failed"); }
                     };
 
                     activeRecTrack = trackId;
@@ -636,7 +695,13 @@
                         btnAppend.classList.add('is-waiting'); btnAppend.innerText = '⏳ Wait...';
                     }
 
-                } catch (e) { alert("Microphone access is required."); }
+                } catch (e) { 
+                    // Crucial fix: Safely reset everything if permission denied
+                    isRecording = false; 
+                    isWaitingToPunchIn = false;
+                    stopPlayback();
+                    alert("Microphone Access Blocked! \n\nPlease ensure your browser has granted microphone permissions. Note: Browsers require you to host this file on a secure (HTTPS) server or Localhost to use the microphone."); 
+                }
             };
 
             function createLiveBlock(trackId, startOffsetTime) {
@@ -669,7 +734,6 @@
                         const x = i * beatSecs * PPS;
                         if (x > canvas.width) break;
 
-                        // Check ALL drum tracks dynamically for visual overlays
                         drumTracks.forEach(drum => {
                             if (drum.pattern[i]) {
                                 if (drum.type === 'kick') { ctx.fillStyle = 'rgba(255, 123, 114, 0.7)'; ctx.fillRect(x, 0, 4, canvas.height); }
@@ -1011,7 +1075,7 @@
                     conv.buffer = offlineReverbBuffer;
                     g.connect(offlineDrumMaster); g.connect(conv); conv.connect(rMix); rMix.connect(offlineDrumMaster);
                     g.gain.value = t.volume; rMix.gain.value = t.reverb;
-                    return { id: t.id, type: t.type, inputGain: g, pitch: t.pitch }; // Added type here
+                    return { id: t.id, type: t.type, inputGain: g, pitch: t.pitch }; 
                 });
 
                 const offlineVocalTracks = vocalTracks.map(t => {
