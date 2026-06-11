@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BeatBox - Pro Demo Creator V6</title>
+    <title>BeatBox - Pro Demo Creator V7</title>
     <style>
         /* --- CORE STYLING & DAW THEME --- */
         :root {
@@ -11,6 +11,7 @@
             --primary: #58a6ff; --accent: #2ea043; --danger: #f85149;
             --warning: #d29922; --text-main: #c9d1d9; --text-muted: #8b949e;
             --drum-kick: #ff7b72; --drum-snare: #d2a8ff; --drum-hihat: #7ee787;
+            --drum-tom: #f0883e; --drum-clap: #79c0ff;
             --selected: #e3b341;
         }
 
@@ -53,12 +54,13 @@
         .btn-beat { background: #8957e5; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px;}
         .btn-beat.playing { background: var(--danger); }
         .btn-add-track { background: var(--primary); color: white; border: none; padding: 8px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; margin-top: 10px; width: 100%;}
+        .btn-add-drum { background: #238636; color: white; border: none; padding: 8px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; margin-top: 10px; width: 100%;}
 
         .instructions { font-size: 12px; color: var(--text-muted); margin-bottom: 10px; line-height: 1.4; background: #090c10; padding: 8px; border-radius: 6px; border: 1px solid var(--border); }
 
         /* --- TRACK LAYOUTS --- */
         .track-row { display: flex; align-items: stretch; margin-bottom: 8px; border: 1px solid var(--border); border-radius: 6px; background: #090c10; }
-        .track-header { width: 280px; padding: 10px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; justify-content: center; gap: 8px; flex-shrink: 0; border-radius: 6px 0 0 6px; }
+        .track-header { width: 280px; padding: 10px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; justify-content: center; gap: 8px; flex-shrink: 0; border-radius: 6px 0 0 6px; position: relative;}
         
         .track-viewport { flex: 1; overflow-x: auto; overflow-y: hidden; position: relative; display: flex; align-items: center; padding: 5px 0; background: #0d1117;}
         .track-inner { position: relative; height: 100%; min-width: 100%; }
@@ -73,12 +75,17 @@
         .btn-group { display: flex; gap: 4px; }
         .btn-action { flex: 1; background: transparent; border: 1px solid var(--border); color: var(--text-main); padding: 5px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 10px; text-align: center; }
         .btn-action:hover { background: rgba(255,255,255,0.05); }
+        .btn-action.del { border-color: var(--text-muted); color: var(--text-muted); }
+        .btn-action.del:hover { background: var(--danger); color: white; border-color: var(--danger); }
+        
         .btn-rec-overwrite { border-color: var(--danger); color: var(--danger); }
         .btn-rec-append { border-color: var(--warning); color: var(--warning); }
         .btn-solo { border-color: var(--primary); color: var(--primary); }
         
         .btn-rec-overwrite.is-recording, .btn-rec-append.is-recording { background: var(--danger); color: white; border-color: var(--danger); animation: pulse 1s infinite; }
         .btn-rec-append.is-waiting { background: var(--warning); color: #000; animation: pulse 1s infinite; }
+
+        .instrument-select { width: 100%; background: #0d1117; color: var(--primary); border: 1px solid var(--border); border-radius: 4px; padding: 4px; font-weight: bold; font-size: 12px; margin-bottom: 4px; outline: none; cursor: pointer;}
 
         @keyframes pulse { 50% { opacity: 0.6; } }
 
@@ -90,13 +97,15 @@
         .step:nth-child(4n + 1) { background: #2a313a; border-left: 2px solid rgba(88, 166, 255, 0.3); }
         .step:nth-child(16n + 1) { border-left: 2px solid rgba(255, 255, 255, 0.5); }
         
-        .step.active[data-drum="kick"] { background: var(--drum-kick); box-shadow: 0 0 8px rgba(255,123,114,0.3); }
-        .step.active[data-drum="snare"] { background: var(--drum-snare); box-shadow: 0 0 8px rgba(210,168,255,0.3); }
-        .step.active[data-drum="hihat"] { background: var(--drum-hihat); box-shadow: 0 0 8px rgba(126,231,135,0.3); }
+        .step.active[data-type="kick"] { background: var(--drum-kick); box-shadow: 0 0 8px rgba(255,123,114,0.3); }
+        .step.active[data-type="snare"] { background: var(--drum-snare); box-shadow: 0 0 8px rgba(210,168,255,0.3); }
+        .step.active[data-type="hihat"] { background: var(--drum-hihat); box-shadow: 0 0 8px rgba(126,231,135,0.3); }
+        .step.active[data-type="tom"] { background: var(--drum-tom); box-shadow: 0 0 8px rgba(240,136,62,0.3); }
+        .step.active[data-type="clap"] { background: var(--drum-clap); box-shadow: 0 0 8px rgba(121,192,255,0.3); }
 
         /* --- VOCAL TIMELINE --- */
         .vocal-timeline-inner { height: 75px; position: relative; background: #090c10; }
-        .grid-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 15; opacity: 1.0; } /* Increased opacity to 1.0 */
+        .grid-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 15; opacity: 1.0; }
 
         .audio-clip {
             position: absolute; height: 80%; top: 10%; background: #1f6feb; border-radius: 4px;
@@ -120,7 +129,7 @@
         <header>
             <div class="logo">
                 <h1>BEATBOX</h1>
-                <span>Pro Studio V6</span>
+                <span>Pro Studio V7</span>
             </div>
             <a href="https://buymeacoffee.com/" target="_blank" class="kofi-btn">☕ Buy Me a Coffee</a>
         </header>
@@ -142,7 +151,7 @@
 
         <div class="panel">
             <div class="section-header">
-                <h2 class="section-title">1. Guide Beat</h2>
+                <h2 class="section-title">1. Dynamic Drum Rack</h2>
                 <div class="header-tools">
                     <select id="stepSelector" class="step-select">
                         <option value="8">8 Steps</option>
@@ -152,15 +161,15 @@
                     <button id="btnPlayBeat" class="btn-beat">🥁 Play Beat Only</button>
                 </div>
             </div>
+            <div class="instructions">
+                <strong>Customize:</strong> Use the dropdown menu on any drum track to change the instrument. Add as many tracks as you want to layer sounds or create complex rhythms.
+            </div>
             <div id="beat-container"></div>
+            <button class="btn-add-drum" onclick="addDrumTrack()">➕ Add Drum Track</button>
         </div>
 
         <div class="panel">
             <h2 class="section-title">2. Vocal Studio</h2>
-            <div class="instructions">
-                <strong>Visual Sync:</strong> The grid lines are now vibrant and draw directly <i>on top</i> of your voice recordings so you can perfectly align your cuts with the kick (red) and snare (purple).<br>
-                <strong>Drums:</strong> Kick and Snare synthesizers have been fully rebuilt for deeper bass thumps and rounded acoustic bodies.
-            </div>
             <div id="vocal-container"></div>
             <button class="btn-add-track" onclick="addVocalTrack()">➕ Add Vocal Track</button>
         </div>
@@ -192,15 +201,19 @@
             let selectedClipId = null;
             let clipboardData = null;
             
+            // Counters for IDs
+            let drumIdCounter = 4;
+            let voxIdCounter = 3;
+            
             // ==========================================
-            // 2. DATA STRUCTURES
+            // 2. DATA STRUCTURES (Now Dynamic Drums)
             // ==========================================
             let drumTracks = [
-                { id: 'hihat', name: 'Hi-Hat', pitch: 1.0, volume: 1.0, reverb: 0.0, inputGain: null, reverbMix: null, convolver: null, 
+                { id: 'drum-1', type: 'hihat', pitch: 1.0, volume: 1.0, reverb: 0.0, inputGain: null, reverbMix: null, convolver: null, 
                   pattern: [true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false] },
-                { id: 'snare', name: 'Snare', pitch: 1.0, volume: 1.0, reverb: 0.2, inputGain: null, reverbMix: null, convolver: null, 
+                { id: 'drum-2', type: 'snare', pitch: 1.0, volume: 1.0, reverb: 0.2, inputGain: null, reverbMix: null, convolver: null, 
                   pattern: [false, false, false, false, true, false, false, false, false, false, false, false, true, false, false, false, false, false, false, false, true, false, false, false, false, false, false, false, true, false, false, false] },
-                { id: 'kick', name: 'Kick', pitch: 1.0, volume: 1.0, reverb: 0.0, inputGain: null, reverbMix: null, convolver: null, 
+                { id: 'drum-3', type: 'kick', pitch: 1.0, volume: 1.0, reverb: 0.0, inputGain: null, reverbMix: null, convolver: null, 
                   pattern: [true, false, false, false, false, false, false, false, true, false, false, false, false, false, false, false, true, false, false, false, false, false, false, false, true, false, false, false, false, false, false, false] }
             ];
 
@@ -226,13 +239,20 @@
                 beatContainer.innerHTML = '';
                 drumTracks.forEach((drum) => {
                     const row = document.createElement('div'); row.className = 'track-row';
+                    
+                    const instOptions = ['kick', 'snare', 'hihat', 'tom', 'clap'].map(type => 
+                        `<option value="${type}" ${drum.type === type ? 'selected' : ''}>${type.toUpperCase()}</option>`
+                    ).join('');
+
                     row.innerHTML = `
                         <div class="track-header">
-                            <span style="font-weight:bold; font-size:13px; color:var(--primary);">${drum.name}</span>
-                            <div class="controls-grid">
-                                <span>Vol</span><input type="range" class="mini-slider" min="0" max="2" step="0.1" value="${drum.volume}" oninput="updateDrumFX('${drum.id}', 'vol', this.value)"><div></div>
-                                <span>Pitch</span><input type="range" id="pitch-${drum.id}" class="mini-slider" min="0.5" max="2" step="0.1" value="${drum.pitch}" oninput="updateDrumFX('${drum.id}', 'pitch', this.value)"><button class="btn-reset" onclick="resetPitch('${drum.id}', 'drum')">↺</button>
-                                <span>Reverb</span><input type="range" class="mini-slider" min="0" max="1" step="0.1" value="${drum.reverb}" oninput="updateDrumFX('${drum.id}', 'reverb', this.value)"><div></div>
+                            <select class="instrument-select" onchange="changeDrumType('${drum.id}', this.value)">
+                                ${instOptions}
+                            </select>
+                            <div class="controls-grid" style="margin-top: 4px;">
+                                <span>Vol</span><input type="range" class="mini-slider" min="0" max="2" step="0.1" value="${drum.volume}" oninput="updateDrumFX('${drum.id}', 'vol', this.value)"><button class="btn-action del" style="grid-row: span 3; height:100%; padding: 0;" onclick="deleteDrumTrack('${drum.id}')">🗑️</button>
+                                <span>Pitch</span><input type="range" id="pitch-${drum.id}" class="mini-slider" min="0.5" max="2" step="0.1" value="${drum.pitch}" oninput="updateDrumFX('${drum.id}', 'pitch', this.value)">
+                                <span>Reverb</span><input type="range" class="mini-slider" min="0" max="1" step="0.1" value="${drum.reverb}" oninput="updateDrumFX('${drum.id}', 'reverb', this.value)">
                             </div>
                         </div>
                         <div class="track-viewport" style="overflow-x: auto;">
@@ -247,8 +267,13 @@
                     for (let i = 0; i < STEPS; i++) {
                         const step = document.createElement('div');
                         step.className = `step ${drum.pattern[i] ? 'active' : ''}`;
-                        step.dataset.drum = drum.id;
-                        step.onclick = () => { drum.pattern[i] = !drum.pattern[i]; step.classList.toggle('active'); drawSyncGrids(); };
+                        step.dataset.type = drum.type; // Color depends on type
+                        step.onclick = () => { 
+                            drum.pattern[i] = !drum.pattern[i]; 
+                            step.classList.toggle('active'); 
+                            if(audioCtx && drum.pattern[i]) playDrumSound(drum, audioCtx.currentTime); // Preview sound
+                            drawSyncGrids(); 
+                        };
                         grid.appendChild(step);
                     }
                     beatContainer.appendChild(row);
@@ -266,7 +291,7 @@
                             </div>
                             <div class="btn-group">
                                 <button class="btn-action btn-solo" onclick="playSolo('${track.id}')">▶ Solo</button>
-                                <button class="btn-action" onclick="clearTrack('${track.id}')">🗑️ Clear</button>
+                                <button class="btn-action del" onclick="deleteVocalTrack('${track.id}')">🗑️ Del Track</button>
                             </div>
                             <div class="controls-grid" style="margin-top: 2px;">
                                 <span>Vol</span><input type="range" class="mini-slider" min="0" max="2" step="0.1" value="${track.volume}" onchange="updateVoxFX('${track.id}', 'vol', this.value)"><div></div>
@@ -297,11 +322,41 @@
                 renderStaticClips(); 
             }
 
+            // UI Actions
+            window.addDrumTrack = () => {
+                const newId = `drum-${drumIdCounter++}`;
+                const emptyPattern = new Array(32).fill(false);
+                drumTracks.push({ id: newId, type: 'kick', pitch: 1.0, volume: 1.0, reverb: 0.0, inputGain: null, reverbMix: null, convolver: null, pattern: emptyPattern });
+                buildInterface();
+                if(audioCtx) initDrumRouting();
+            };
+
+            window.deleteDrumTrack = (id) => {
+                drumTracks = drumTracks.filter(t => t.id !== id);
+                buildInterface();
+                drawSyncGrids();
+            };
+
+            window.changeDrumType = (id, newType) => {
+                const drum = drumTracks.find(d => d.id === id);
+                if (drum) {
+                    drum.type = newType;
+                    buildInterface();
+                    if(audioCtx) playDrumSound(drum, audioCtx.currentTime); // Preview
+                }
+            };
+
             window.addVocalTrack = () => {
-                const newId = `vox-${vocalTracks.length + 1}`;
+                const newId = `vox-${voxIdCounter++}`;
                 vocalTracks.push({ id: newId, volume: 1.0, pitch: 1.0, reverb: 0.0, echo: 0.0, inputGain: null, reverbMix: null, convolver: null, delayNode: null, delayMix: null, delayFeedback: null });
                 buildInterface();
                 if(audioCtx) initVocalRouting(); 
+            };
+
+            window.deleteVocalTrack = (id) => {
+                vocalTracks = vocalTracks.filter(t => t.id !== id);
+                vocalClips = vocalClips.filter(c => c.trackId !== id);
+                buildInterface();
             };
 
             document.getElementById('stepSelector').addEventListener('change', (e) => {
@@ -330,7 +385,7 @@
                 if (!audioCtx) {
                     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                     masterGain = audioCtx.createGain(); 
-                    masterGain.gain.value = 0.9; // Prevent clipping
+                    masterGain.gain.value = 0.9; 
                     masterGain.connect(audioCtx.destination);
                     mixDest = audioCtx.createMediaStreamDestination(); masterGain.connect(mixDest);
                     
@@ -436,56 +491,74 @@
             });
 
             // ==========================================
-            // 5. SYNTHESIS (UPGRADED BASS & DRUM BODY)
+            // 5. SYNTHESIS (NEW TYPES ADDED)
             // ==========================================
             function playDrumSound(track, time, context = audioCtx, destination = drumMasterGain) {
                 let targetDest = (context === audioCtx && track.inputGain) ? track.inputGain : destination;
 
-                if (track.id === 'kick') {
-                    // Deep Bass Thump
+                if (track.type === 'kick') {
                     const osc = context.createOscillator(), gain = context.createGain();
                     osc.connect(gain).connect(targetDest);
                     osc.frequency.setValueAtTime(150 * track.pitch, time); 
                     osc.frequency.exponentialRampToValueAtTime(45 * track.pitch, time + 0.1);
                     osc.frequency.exponentialRampToValueAtTime(0.001, time + 0.6);
-                    gain.gain.setValueAtTime(1.2, time); // A bit hotter
+                    gain.gain.setValueAtTime(1.2, time); 
                     gain.gain.exponentialRampToValueAtTime(0.001, time + 0.6);
                     osc.start(time); osc.stop(time + 0.6);
 
-                } else if (track.id === 'snare') {
-                    // Acoustic Body (Tone)
+                } else if (track.type === 'snare') {
                     const osc = context.createOscillator(), oGain = context.createGain();
-                    osc.type = 'sine'; // Rounded body
-                    osc.connect(oGain).connect(targetDest);
+                    osc.type = 'sine'; osc.connect(oGain).connect(targetDest);
                     osc.frequency.setValueAtTime(220 * track.pitch, time); 
                     osc.frequency.exponentialRampToValueAtTime(120 * track.pitch, time + 0.1); 
-                    oGain.gain.setValueAtTime(1.0, time); 
-                    oGain.gain.exponentialRampToValueAtTime(0.01, time + 0.2);
+                    oGain.gain.setValueAtTime(1.0, time); oGain.gain.exponentialRampToValueAtTime(0.01, time + 0.2);
                     osc.start(time); osc.stop(time + 0.2);
 
-                    // Snare Wires (Noise)
                     const noise = context.createBufferSource(), filter = context.createBiquadFilter(), gain = context.createGain();
                     let nBuffer = context.createBuffer(1, context.sampleRate * 0.5, context.sampleRate);
                     let nData = nBuffer.getChannelData(0);
                     for (let i = 0; i < nData.length; i++) nData[i] = Math.random() * 2 - 1;
-                    
-                    noise.buffer = nBuffer; 
-                    filter.type = 'bandpass'; // Less harsh than highpass
-                    filter.frequency.value = 2500 * track.pitch;
-                    filter.Q.value = 0.8;
-                    gain.gain.setValueAtTime(0.5, time); // Lower volume to blend better
-                    gain.gain.exponentialRampToValueAtTime(0.01, time + 0.2);
+                    noise.buffer = nBuffer; filter.type = 'bandpass'; filter.frequency.value = 2500 * track.pitch; filter.Q.value = 0.8;
+                    gain.gain.setValueAtTime(0.5, time); gain.gain.exponentialRampToValueAtTime(0.01, time + 0.2);
                     noise.connect(filter).connect(gain).connect(targetDest); noise.start(time); noise.stop(time + 0.2);
 
-                } else if (track.id === 'hihat') {
+                } else if (track.type === 'hihat') {
                     const noise = context.createBufferSource(), filter = context.createBiquadFilter(), gain = context.createGain();
                     let nBuffer = context.createBuffer(1, context.sampleRate * 0.1, context.sampleRate);
                     let nData = nBuffer.getChannelData(0);
                     for (let i = 0; i < nData.length; i++) nData[i] = Math.random() * 2 - 1;
-
                     noise.buffer = nBuffer; filter.type = 'highpass'; filter.frequency.value = 7000 * track.pitch;
                     gain.gain.setValueAtTime(0.6, time); gain.gain.exponentialRampToValueAtTime(0.01, time + 0.05);
                     noise.connect(filter).connect(gain).connect(targetDest); noise.start(time); noise.stop(time + 0.05);
+                
+                } else if (track.type === 'tom') {
+                    const osc = context.createOscillator(), gain = context.createGain();
+                    osc.type = 'sine'; osc.connect(gain).connect(targetDest);
+                    osc.frequency.setValueAtTime(250 * track.pitch, time); 
+                    osc.frequency.exponentialRampToValueAtTime(80 * track.pitch, time + 0.3);
+                    gain.gain.setValueAtTime(1.0, time); gain.gain.exponentialRampToValueAtTime(0.01, time + 0.4);
+                    osc.start(time); osc.stop(time + 0.4);
+                    
+                } else if (track.type === 'clap') {
+                    const filter = context.createBiquadFilter(), gain = context.createGain();
+                    filter.type = 'bandpass'; filter.frequency.value = 1500 * track.pitch; filter.Q.value = 1.5;
+                    gain.connect(targetDest);
+                    
+                    // Create three rapid noise bursts for a realistic clap
+                    [0, 0.015, 0.03].forEach(delay => {
+                        const noise = context.createBufferSource();
+                        let nBuffer = context.createBuffer(1, context.sampleRate * 0.1, context.sampleRate);
+                        let nData = nBuffer.getChannelData(0);
+                        for (let i = 0; i < nData.length; i++) nData[i] = Math.random() * 2 - 1;
+                        noise.buffer = nBuffer;
+                        
+                        const bGain = context.createGain();
+                        bGain.gain.setValueAtTime(0.8, time + delay);
+                        bGain.gain.exponentialRampToValueAtTime(0.01, time + delay + 0.1);
+                        
+                        noise.connect(filter).connect(bGain).connect(gain);
+                        noise.start(time + delay); noise.stop(time + delay + 0.1);
+                    });
                 }
             }
 
@@ -498,10 +571,7 @@
                     }
                     nextDrumTime += (60.0 / tempo) * 0.25;
                     currentDrumStep++;
-                    
-                    if (currentDrumStep >= STEPS) {
-                        currentDrumStep = 0;
-                    }
+                    if (currentDrumStep >= STEPS) currentDrumStep = 0;
                 }
                 timerID = window.setTimeout(scheduler, 25.0);
             }
@@ -588,8 +658,6 @@
 
             function drawSyncGrids() {
                 const beatSecs = (60 / tempo) * 0.25; 
-                const kickTrack = drumTracks.find(d => d.id === 'kick');
-                const snareTrack = drumTracks.find(d => d.id === 'snare');
                 
                 document.querySelectorAll('.grid-canvas').forEach(canvas => {
                     const p = canvas.parentElement;
@@ -601,17 +669,15 @@
                         const x = i * beatSecs * PPS;
                         if (x > canvas.width) break;
 
-                        // Vibrant Drum Overlays (drawn thick and bright)
-                        if (kickTrack && kickTrack.pattern[i]) {
-                            ctx.fillStyle = 'rgba(255, 123, 114, 0.85)'; // Solid Kick Red
-                            ctx.fillRect(x, 0, 4, canvas.height);
-                        }
-                        if (snareTrack && snareTrack.pattern[i]) {
-                            ctx.fillStyle = 'rgba(210, 168, 255, 0.85)'; // Solid Snare Purple
-                            ctx.fillRect(x, 0, 4, canvas.height);
-                        }
+                        // Check ALL drum tracks dynamically for visual overlays
+                        drumTracks.forEach(drum => {
+                            if (drum.pattern[i]) {
+                                if (drum.type === 'kick') { ctx.fillStyle = 'rgba(255, 123, 114, 0.7)'; ctx.fillRect(x, 0, 4, canvas.height); }
+                                else if (drum.type === 'snare') { ctx.fillStyle = 'rgba(210, 168, 255, 0.7)'; ctx.fillRect(x, 0, 4, canvas.height); }
+                                else if (drum.type === 'clap') { ctx.fillStyle = 'rgba(121, 192, 255, 0.6)'; ctx.fillRect(x, 0, 4, canvas.height); }
+                            }
+                        });
                         
-                        // Solid White Bar markers
                         ctx.beginPath();
                         if (i % 4 === 0) {
                             ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
@@ -650,7 +716,6 @@
                         stopPlayback(); return;
                     }
 
-                    // --- PERFECT BEAT PLAYHEAD ---
                     const loopDur = getLoopDuration();
                     const currentDrumOffset = audioCtx.currentTime - drumLoopStartOffset;
                     const beatCycleTime = currentDrumOffset % loopDur;
@@ -664,7 +729,6 @@
                         }
                     });
 
-                    // --- VOCAL PLAYHEAD (Absolute Pixels) ---
                     const vocalPx = currentAbsTime * PPS;
                     document.querySelectorAll('.playhead-vocal').forEach(ph => {
                         ph.style.display = playState === 'BEAT_ONLY' ? 'none' : 'block';
@@ -823,8 +887,6 @@
                 renderStaticClips();
             }
 
-            window.clearTrack = (trackId) => { vocalClips = vocalClips.filter(c => c.trackId !== trackId); renderStaticClips(); };
-
             window.addEventListener('keydown', (e) => {
                 if (isRecording || isWaitingToPunchIn || e.target.tagName === 'INPUT') return;
                 
@@ -949,7 +1011,7 @@
                     conv.buffer = offlineReverbBuffer;
                     g.connect(offlineDrumMaster); g.connect(conv); conv.connect(rMix); rMix.connect(offlineDrumMaster);
                     g.gain.value = t.volume; rMix.gain.value = t.reverb;
-                    return { id: t.id, inputGain: g, pitch: t.pitch };
+                    return { id: t.id, type: t.type, inputGain: g, pitch: t.pitch }; // Added type here
                 });
 
                 const offlineVocalTracks = vocalTracks.map(t => {
