@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BeatBox - Pro Demo Creator V5</title>
+    <title>BeatBox - Pro Demo Creator V6</title>
     <style>
         /* --- CORE STYLING & DAW THEME --- */
         :root {
@@ -96,7 +96,7 @@
 
         /* --- VOCAL TIMELINE --- */
         .vocal-timeline-inner { height: 75px; position: relative; background: #090c10; }
-        .grid-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 15; opacity: 0.5; }
+        .grid-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 15; opacity: 1.0; } /* Increased opacity to 1.0 */
 
         .audio-clip {
             position: absolute; height: 80%; top: 10%; background: #1f6feb; border-radius: 4px;
@@ -120,7 +120,7 @@
         <header>
             <div class="logo">
                 <h1>BEATBOX</h1>
-                <span>Pro Studio V5</span>
+                <span>Pro Studio V6</span>
             </div>
             <a href="https://buymeacoffee.com/" target="_blank" class="kofi-btn">☕ Buy Me a Coffee</a>
         </header>
@@ -158,8 +158,8 @@
         <div class="panel">
             <h2 class="section-title">2. Vocal Studio</h2>
             <div class="instructions">
-                <strong>Recording:</strong> The button says <b>🔴 Record</b> if the track is empty. It turns to <b>Overwrite</b> to warn you if a clip already exists on that track.<br>
-                <strong>Beat Sync:</strong> Light vertical bars on the vocal grid show exactly where your Kick and Snare are hitting.
+                <strong>Visual Sync:</strong> The grid lines are now vibrant and draw directly <i>on top</i> of your voice recordings so you can perfectly align your cuts with the kick (red) and snare (purple).<br>
+                <strong>Drums:</strong> Kick and Snare synthesizers have been fully rebuilt for deeper bass thumps and rounded acoustic bodies.
             </div>
             <div id="vocal-container"></div>
             <button class="btn-add-track" onclick="addVocalTrack()">➕ Add Vocal Track</button>
@@ -436,41 +436,46 @@
             });
 
             // ==========================================
-            // 5. SYNTHESIS
+            // 5. SYNTHESIS (UPGRADED BASS & DRUM BODY)
             // ==========================================
             function playDrumSound(track, time, context = audioCtx, destination = drumMasterGain) {
                 let targetDest = (context === audioCtx && track.inputGain) ? track.inputGain : destination;
 
                 if (track.id === 'kick') {
+                    // Deep Bass Thump
                     const osc = context.createOscillator(), gain = context.createGain();
                     osc.connect(gain).connect(targetDest);
-                    osc.frequency.setValueAtTime(120 * track.pitch, time); 
-                    osc.frequency.exponentialRampToValueAtTime(40 * track.pitch, time + 0.1);
-                    osc.frequency.exponentialRampToValueAtTime(0.001, time + 0.8);
-                    gain.gain.setValueAtTime(1, time); gain.gain.exponentialRampToValueAtTime(0.001, time + 0.8);
-                    
-                    const clickOsc = context.createOscillator(), clickGain = context.createGain();
-                    clickOsc.type = 'square'; clickOsc.frequency.value = 800;
-                    clickGain.gain.setValueAtTime(0.3, time); clickGain.gain.exponentialRampToValueAtTime(0.001, time + 0.02);
-                    clickOsc.connect(clickGain).connect(targetDest);
-                    
-                    clickOsc.start(time); clickOsc.stop(time + 0.05);
-                    osc.start(time); osc.stop(time + 0.8);
+                    osc.frequency.setValueAtTime(150 * track.pitch, time); 
+                    osc.frequency.exponentialRampToValueAtTime(45 * track.pitch, time + 0.1);
+                    osc.frequency.exponentialRampToValueAtTime(0.001, time + 0.6);
+                    gain.gain.setValueAtTime(1.2, time); // A bit hotter
+                    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.6);
+                    osc.start(time); osc.stop(time + 0.6);
 
                 } else if (track.id === 'snare') {
+                    // Acoustic Body (Tone)
+                    const osc = context.createOscillator(), oGain = context.createGain();
+                    osc.type = 'sine'; // Rounded body
+                    osc.connect(oGain).connect(targetDest);
+                    osc.frequency.setValueAtTime(220 * track.pitch, time); 
+                    osc.frequency.exponentialRampToValueAtTime(120 * track.pitch, time + 0.1); 
+                    oGain.gain.setValueAtTime(1.0, time); 
+                    oGain.gain.exponentialRampToValueAtTime(0.01, time + 0.2);
+                    osc.start(time); osc.stop(time + 0.2);
+
+                    // Snare Wires (Noise)
                     const noise = context.createBufferSource(), filter = context.createBiquadFilter(), gain = context.createGain();
                     let nBuffer = context.createBuffer(1, context.sampleRate * 0.5, context.sampleRate);
                     let nData = nBuffer.getChannelData(0);
                     for (let i = 0; i < nData.length; i++) nData[i] = Math.random() * 2 - 1;
                     
-                    noise.buffer = nBuffer; filter.type = 'highpass'; filter.frequency.value = 1000 * track.pitch;
-                    gain.gain.setValueAtTime(1, time); gain.gain.exponentialRampToValueAtTime(0.01, time + 0.25);
-                    noise.connect(filter).connect(gain).connect(targetDest); noise.start(time); noise.stop(time + 0.25);
-                    
-                    const osc = context.createOscillator(), oGain = context.createGain();
-                    osc.type = 'triangle'; osc.connect(oGain).connect(targetDest);
-                    osc.frequency.setValueAtTime(250 * track.pitch, time); oGain.gain.setValueAtTime(0.8, time); oGain.gain.exponentialRampToValueAtTime(0.01, time + 0.15);
-                    osc.start(time); osc.stop(time + 0.2);
+                    noise.buffer = nBuffer; 
+                    filter.type = 'bandpass'; // Less harsh than highpass
+                    filter.frequency.value = 2500 * track.pitch;
+                    filter.Q.value = 0.8;
+                    gain.gain.setValueAtTime(0.5, time); // Lower volume to blend better
+                    gain.gain.exponentialRampToValueAtTime(0.01, time + 0.2);
+                    noise.connect(filter).connect(gain).connect(targetDest); noise.start(time); noise.stop(time + 0.2);
 
                 } else if (track.id === 'hihat') {
                     const noise = context.createBufferSource(), filter = context.createBiquadFilter(), gain = context.createGain();
@@ -596,19 +601,26 @@
                         const x = i * beatSecs * PPS;
                         if (x > canvas.width) break;
 
+                        // Vibrant Drum Overlays (drawn thick and bright)
                         if (kickTrack && kickTrack.pattern[i]) {
-                            ctx.fillStyle = 'rgba(255, 123, 114, 0.2)'; 
+                            ctx.fillStyle = 'rgba(255, 123, 114, 0.85)'; // Solid Kick Red
                             ctx.fillRect(x, 0, 4, canvas.height);
                         }
                         if (snareTrack && snareTrack.pattern[i]) {
-                            ctx.fillStyle = 'rgba(210, 168, 255, 0.2)'; 
+                            ctx.fillStyle = 'rgba(210, 168, 255, 0.85)'; // Solid Snare Purple
                             ctx.fillRect(x, 0, 4, canvas.height);
                         }
                         
+                        // Solid White Bar markers
                         ctx.beginPath();
-                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-                        ctx.lineWidth = 1;
-                        ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+                        if (i % 4 === 0) {
+                            ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+                            ctx.fillRect(x, 0, 2, canvas.height);
+                        } else {
+                            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+                            ctx.lineWidth = 1;
+                            ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+                        }
                     }
                 });
             }
@@ -638,6 +650,7 @@
                         stopPlayback(); return;
                     }
 
+                    // --- PERFECT BEAT PLAYHEAD ---
                     const loopDur = getLoopDuration();
                     const currentDrumOffset = audioCtx.currentTime - drumLoopStartOffset;
                     const beatCycleTime = currentDrumOffset % loopDur;
@@ -651,6 +664,7 @@
                         }
                     });
 
+                    // --- VOCAL PLAYHEAD (Absolute Pixels) ---
                     const vocalPx = currentAbsTime * PPS;
                     document.querySelectorAll('.playhead-vocal').forEach(ph => {
                         ph.style.display = playState === 'BEAT_ONLY' ? 'none' : 'block';
@@ -735,7 +749,6 @@
                 updateRecordButtons();
             }
 
-            // The core fix to dynamically switch Record/Overwrite text
             function updateRecordButtons() {
                 vocalTracks.forEach(track => {
                     const btnNew = document.getElementById(`rec-btn-new-${track.id}`);
@@ -882,7 +895,7 @@
                 
                 document.querySelectorAll('.btn-rec-append').forEach(btn => { btn.classList.remove('is-recording', 'is-waiting'); btn.innerText = '➕ Append'; });
                 document.querySelectorAll('.btn-rec-overwrite').forEach(btn => { btn.classList.remove('is-recording'); });
-                updateRecordButtons(); // Safely reset Overwrite/Record text
+                updateRecordButtons(); 
                 
                 document.querySelectorAll('.playhead-beat').forEach(ph => ph.style.display = 'none');
                 document.querySelectorAll('.playhead-vocal').forEach(ph => ph.style.display = 'none');
