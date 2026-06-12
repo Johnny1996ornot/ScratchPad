@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BeatBox - Pro Demo Creator V4</title>
+    <title>BeatBox - Pro Demo Creator V5</title>
     <style>
         /* --- CORE STYLING & DAW THEME --- */
         :root {
@@ -28,10 +28,7 @@
         .logo h1 { margin: 0; font-size: 26px; font-weight: 900; letter-spacing: 2px; }
         .logo span { color: var(--primary); font-size: 13px; text-transform: uppercase; letter-spacing: 1px; }
         
-        .kofi-btn {
-            background: #FFDD00; color: #000; text-decoration: none; padding: 8px 16px;
-            border-radius: 20px; font-weight: bold; font-size: 14px; display: flex; align-items: center; gap: 8px;
-        }
+        .kofi-btn { background: #FFDD00; color: #000; text-decoration: none; padding: 8px 16px; border-radius: 20px; font-weight: bold; font-size: 14px; display: flex; align-items: center; gap: 8px; }
         .kofi-btn:hover { opacity: 0.9; }
         
         .top-controls { display: flex; justify-content: space-between; align-items: center; background: var(--surface); padding: 15px 20px; border-radius: 12px; border: 1px solid var(--border); }
@@ -47,12 +44,13 @@
 
         /* --- PANELS & SECTION HEADERS --- */
         .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
-        
         .section-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 15px; }
         .section-title { margin: 0; font-size: 16px; color: #fff; text-transform: uppercase; letter-spacing: 1px; }
         
         .btn-beat { background: #8957e5; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px;}
         .btn-beat.playing { background: var(--danger); }
+        .btn-add-track { background: var(--surface); color: var(--primary); border: 1px dashed var(--primary); padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; transition: 0.2s;}
+        .btn-add-track:hover { background: rgba(88, 166, 255, 0.1); }
 
         .instructions { font-size: 13px; color: var(--text-muted); margin-bottom: 15px; line-height: 1.5; background: #090c10; padding: 10px; border-radius: 6px; border: 1px solid var(--border); }
 
@@ -60,6 +58,10 @@
         .track-row { display: flex; align-items: stretch; margin-bottom: 12px; border: 1px solid var(--border); border-radius: 8px; background: #090c10; }
         .track-header { width: 280px; padding: 15px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; justify-content: center; gap: 10px; flex-shrink: 0; border-radius: 8px 0 0 8px; }
         
+        .track-name-dropdown { background: transparent; color: var(--primary); font-weight: bold; font-size: 15px; border: 1px solid transparent; padding: 2px; cursor: pointer; outline: none; }
+        .track-name-dropdown:hover { border-bottom: 1px dashed var(--primary); }
+        .track-name-dropdown option { background: var(--surface); color: white; }
+
         .track-viewport { flex: 1; overflow-x: auto; overflow-y: hidden; position: relative; display: flex; align-items: center; padding: 8px 0; background: #0d1117;}
         .track-inner { position: relative; height: 100%; min-width: 100%; }
 
@@ -92,12 +94,11 @@
         .step:nth-child(4n + 1) { background: #2a313a; border-left: 2px solid rgba(88, 166, 255, 0.3); }
         .step:nth-child(16n + 1) { border-left: 3px solid rgba(255, 255, 255, 0.5); }
         
-        .step.active[data-drum="kick"] { background: var(--drum-kick); box-shadow: 0 0 10px rgba(255,123,114,0.3); }
-        .step.active[data-drum="snare"] { background: var(--drum-snare); box-shadow: 0 0 10px rgba(210,168,255,0.3); }
-        .step.active[data-drum="hihat"] { background: var(--drum-hihat); box-shadow: 0 0 10px rgba(126,231,135,0.3); }
-        
-        /* New Piano Chord Styling */
-        .step.chord-active { background: var(--chord-active); box-shadow: 0 0 10px rgba(227, 179, 65, 0.4); }
+        .step.active.type-kick { background: var(--drum-kick); box-shadow: 0 0 10px rgba(255,123,114,0.3); }
+        .step.active.type-snare { background: var(--drum-snare); box-shadow: 0 0 10px rgba(210,168,255,0.3); }
+        .step.active.type-hihat { background: var(--drum-hihat); box-shadow: 0 0 10px rgba(126,231,135,0.3); }
+        .step.active.type-piano { background: var(--chord-active); box-shadow: 0 0 10px rgba(227, 179, 65, 0.4); }
+        .step.active.type-synth { background: #bf398e; box-shadow: 0 0 10px rgba(191, 57, 142, 0.4); color: white;}
 
         /* --- VOCAL TIMELINE --- */
         .vocal-timeline-inner { height: 90px; position: relative; background: #090c10; }
@@ -125,7 +126,7 @@
         <header>
             <div class="logo">
                 <h1>BEATBOX</h1>
-                <span>Pro Studio V4</span>
+                <span>Pro Studio V5</span>
             </div>
             <a href="https://buymeacoffee.com/" target="_blank" class="kofi-btn">☕ Buy Me a Coffee</a>
         </header>
@@ -144,10 +145,14 @@
         <div class="panel">
             <div class="section-header">
                 <h2 class="section-title">1. Guide Beat & Instruments (32 Steps)</h2>
-                <button id="btnPlayBeat" class="btn-beat">🥁 Play Beat Only</button>
+                <div style="display:flex; gap:10px;">
+                    <button id="btnAddTrack" class="btn-add-track">➕ Add Instrument</button>
+                    <button id="btnPlayBeat" class="btn-beat">🥁 Play Beat Only</button>
+                </div>
             </div>
             <div class="instructions" style="margin-top: -5px;">
-                <strong>Piano Keys:</strong> Click any box in the "Keys" tracks to add a chord. Keep clicking to cycle through chords (C, Dm, Em, F, G, Am).
+                <strong>Instruments:</strong> Click an instrument's name (e.g. "Hi-Hat") to change it to a Piano or Synth.<br>
+                <strong>Chords:</strong> For Piano/Synth tracks, click a box to activate it. <b>Hover over the box and scroll your mouse wheel</b> to change the chord instantly!
             </div>
             <div id="beat-container"></div>
         </div>
@@ -163,8 +168,7 @@
             </div>
 
             <div class="instructions">
-                <strong>Audio FX:</strong> You now have true <b>Reverb</b> (Room/Hall sound) on both Drums/Keys and Vocals, plus <b>Echo</b> (Repeating delays) exclusively for vocals.<br>
-                <strong>Workspace:</strong> Hover over the vocal track and hold <b>Ctrl + Mouse Wheel</b> to zoom in and out. Grid lines now render <i>over</i> the voice clips so you can sync up perfectly.
+                <strong>Workspace:</strong> Hover over the vocal track and hold <b>Ctrl + Mouse Wheel</b> to zoom in and out. The grid lines overlay the vocals so you can visually match the beat.
             </div>
             <div id="vocal-container"></div>
         </div>
@@ -196,35 +200,49 @@
             let selectedClipId = null;
             let clipboardData = null;
             
-            // Available Chords for the Cycle
-            const AVAILABLE_CHORDS = [false, 'C', 'Dm', 'Em', 'F', 'G', 'Am'];
+            const AVAILABLE_CHORDS = ['C', 'Dm', 'Em', 'F', 'G', 'Am'];
             
-            // ==========================================
-            // 2. DATA STRUCTURES
-            // ==========================================
-            let masterTracks = [
-                // Drums
-                { id: 'hihat', type: 'drum', name: 'Hi-Hat', pitch: 1.0, volume: 1.0, reverb: 0.0, inputGain: null, reverbMix: null, convolver: null, 
-                  pattern: [true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false] },
-                { id: 'snare', type: 'drum', name: 'Snare', pitch: 1.0, volume: 1.0, reverb: 0.2, inputGain: null, reverbMix: null, convolver: null, 
-                  pattern: [false, false, false, false, true, false, false, false, false, false, false, false, true, false, false, false, false, false, false, false, true, false, false, false, false, false, false, false, true, false, false, false] },
-                { id: 'kick', type: 'drum', name: 'Kick', pitch: 1.0, volume: 1.0, reverb: 0.0, inputGain: null, reverbMix: null, convolver: null, 
-                  pattern: [true, false, false, false, false, false, false, false, true, false, false, false, false, false, false, false, true, false, false, false, false, false, false, false, true, false, false, false, false, false, false, false] },
-                // Pianos
-                { id: 'keys1', type: 'chord', name: 'Keys 1 (Piano)', pitch: 1.0, volume: 0.8, reverb: 0.5, inputGain: null, reverbMix: null, convolver: null, 
-                  pattern: Array(32).fill(false) },
-                { id: 'keys2', type: 'chord', name: 'Keys 2 (Synth)', pitch: 1.0, volume: 0.8, reverb: 0.5, inputGain: null, reverbMix: null, convolver: null, 
-                  pattern: Array(32).fill(false) }
+            const INSTRUMENT_TYPES = [
+                { val: 'hihat', label: 'Hi-Hat', type: 'drum' },
+                { val: 'snare', label: 'Snare', type: 'drum' },
+                { val: 'kick', label: 'Kick', type: 'drum' },
+                { val: 'piano', label: 'Piano (Chords)', type: 'chord' },
+                { val: 'synth', label: 'Synth (Chords)', type: 'chord' }
             ];
+
+            // ==========================================
+            // 2. DYNAMIC DATA STRUCTURES
+            // ==========================================
+            let trackIdCounter = 0;
+            let masterTracks = [
+                createTrack('hihat'),
+                createTrack('snare'),
+                createTrack('kick')
+            ];
+            
+            // Default Patterns for the initial 3
+            masterTracks[0].pattern = [true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false];
+            masterTracks[1].pattern = [false, false, false, false, true, false, false, false, false, false, false, false, true, false, false, false, false, false, false, false, true, false, false, false, false, false, false, false, true, false, false, false];
+            masterTracks[2].pattern = [true, false, false, false, false, false, false, false, true, false, false, false, false, false, false, false, true, false, false, false, false, false, false, false, true, false, false, false, false, false, false, false];
+
+            function createTrack(instrumentVal) {
+                const info = INSTRUMENT_TYPES.find(i => i.val === instrumentVal);
+                return {
+                    id: `inst-${trackIdCounter++}`,
+                    instrument: info.val,
+                    type: info.type,
+                    pitch: 1.0, volume: 1.0, reverb: info.type === 'drum' ? 0.1 : 0.4,
+                    inputGain: null, reverbMix: null, convolver: null,
+                    pattern: Array(32).fill(false)
+                };
+            }
 
             let vocalTracks = [
                 { id: 'vox-1', volume: 1.0, pitch: 1.0, reverb: 0.0, echo: 0.0, inputGain: null, reverbMix: null, convolver: null, delayNode: null, delayMix: null, delayFeedback: null },
                 { id: 'vox-2', volume: 1.0, pitch: 1.0, reverb: 0.0, echo: 0.0, inputGain: null, reverbMix: null, convolver: null, delayNode: null, delayMix: null, delayFeedback: null }
             ];
 
-            let vocalClips = [];
-            let clipIdCounter = 0;
-            
+            let vocalClips = []; let clipIdCounter = 0;
             let activeRecTrack = null, mediaRec, audioChunks = [];
             let punchInTargetTime = 0, recordingStartTime = 0, activeRecordingBlock = null;
             let liveAnalyser, liveDataArray, liveCanvasCtx;
@@ -233,7 +251,6 @@
             // 3. UI GENERATION & HARDWARE LOGIC
             // ==========================================
             
-            // Microphone Enumerator
             document.getElementById('btnDetectMics').addEventListener('click', async () => {
                 try {
                     await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -241,39 +258,47 @@
                     const audioInputs = devices.filter(d => d.kind === 'audioinput');
                     const micSelect = document.getElementById('micSelect');
                     micSelect.innerHTML = '';
-                    
-                    if(audioInputs.length === 0) {
-                        micSelect.innerHTML = '<option value="">No microphones found</option>';
-                        return;
-                    }
-
+                    if(audioInputs.length === 0) { micSelect.innerHTML = '<option value="">No microphones found</option>'; return; }
                     audioInputs.forEach((device, i) => {
-                        const opt = document.createElement('option');
-                        opt.value = device.deviceId;
-                        opt.text = device.label || `Microphone ${i + 1}`;
+                        const opt = document.createElement('option'); opt.value = device.deviceId; opt.text = device.label || `Microphone ${i + 1}`;
                         micSelect.appendChild(opt);
                     });
-                    
-                    document.getElementById('btnDetectMics').innerText = "✅ Mics Connected";
-                    document.getElementById('btnDetectMics').style.background = "var(--accent)";
-                    document.getElementById('btnDetectMics').style.color = "white";
+                    const btn = document.getElementById('btnDetectMics');
+                    btn.innerText = "✅ Mics Connected"; btn.style.background = "var(--accent)"; btn.style.color = "white";
+                } catch (e) { alert("Microphone permission denied."); }
+            });
 
-                } catch (e) {
-                    alert("Microphone permission denied or unavailable. Please check browser settings.");
-                }
+            document.getElementById('btnAddTrack').addEventListener('click', () => {
+                masterTracks.push(createTrack('piano'));
+                buildBeatInterface();
+                if(audioCtx) initMasterRouting(); // Re-route if audio is active
             });
 
             const beatContainer = document.getElementById('beat-container');
             const vocalContainer = document.getElementById('vocal-container');
 
-            function buildInterface() {
+            window.changeInstrument = (trackId, newVal) => {
+                const track = masterTracks.find(t => t.id === trackId);
+                const info = INSTRUMENT_TYPES.find(i => i.val === newVal);
+                track.instrument = info.val;
+                track.type = info.type;
+                // Reset pattern when switching types to avoid data mismatches
+                track.pattern = Array(32).fill(false);
+                buildBeatInterface();
+            };
+
+            function buildBeatInterface() {
                 beatContainer.innerHTML = '';
-                masterTracks.forEach((track, index) => {
+                masterTracks.forEach((track) => {
                     const row = document.createElement('div'); row.className = 'track-row';
+                    
+                    let optionsHTML = INSTRUMENT_TYPES.map(i => `<option value="${i.val}" ${track.instrument === i.val ? 'selected' : ''}>${i.label}</option>`).join('');
                     
                     row.innerHTML = `
                         <div class="track-header">
-                            <span style="font-weight:bold; font-size:15px; color:${track.type === 'chord' ? '#e3b341' : 'var(--primary)'};">${track.name}</span>
+                            <select class="track-name-dropdown" onchange="changeInstrument('${track.id}', this.value)">
+                                ${optionsHTML}
+                            </select>
                             <div class="controls-grid">
                                 <span>Vol</span><input type="range" class="mini-slider" min="0" max="2" step="0.1" value="${track.volume}" oninput="updateMasterFX('${track.id}', 'vol', this.value)">
                                 <span>Pitch</span><input type="range" class="mini-slider" min="0.5" max="2" step="0.1" value="${track.pitch}" oninput="updateMasterFX('${track.id}', 'pitch', this.value)">
@@ -292,41 +317,62 @@
                     for (let i = 0; i < STEPS; i++) {
                         const step = document.createElement('div');
                         
-                        // Render initial state
-                        if (track.type === 'drum') {
-                            step.className = `step ${track.pattern[i] ? 'active' : ''}`;
-                            step.dataset.drum = track.id;
-                        } else if (track.type === 'chord') {
-                            step.className = `step ${track.pattern[i] ? 'chord-active' : ''}`;
-                            step.innerText = track.pattern[i] ? track.pattern[i] : '';
+                        function updateStepVisual() {
+                            step.className = 'step';
+                            if (track.pattern[i]) {
+                                step.classList.add('active', `type-${track.instrument}`);
+                            }
+                            if (track.type === 'chord') {
+                                step.innerText = track.pattern[i] ? track.pattern[i] : '';
+                            } else {
+                                step.innerText = '';
+                            }
                         }
+                        
+                        updateStepVisual();
 
-                        // Handle Clicks
+                        // Click Logic
                         step.onclick = () => { 
                             if (track.type === 'drum') {
                                 track.pattern[i] = !track.pattern[i]; 
-                                step.classList.toggle('active'); 
                             } else if (track.type === 'chord') {
-                                let currentIndex = AVAILABLE_CHORDS.indexOf(track.pattern[i]);
-                                let nextIndex = (currentIndex + 1) % AVAILABLE_CHORDS.length;
-                                track.pattern[i] = AVAILABLE_CHORDS[nextIndex];
-                                
-                                step.className = `step ${track.pattern[i] ? 'chord-active' : ''}`;
-                                step.innerText = track.pattern[i] ? track.pattern[i] : '';
-                                
-                                // Preview the chord when clicked
+                                // Toggle on/off. If turning on, default to 'C'
+                                track.pattern[i] = track.pattern[i] ? false : 'C';
                                 if (track.pattern[i] && !isRecording && playState === 'STOPPED') {
-                                    initAudio();
-                                    playChord(track.pattern[i], track.pitch, audioCtx.currentTime, audioCtx, track.inputGain);
+                                    initAudio(); playChord(track.pattern[i], track.instrument, track.pitch, audioCtx.currentTime, audioCtx, track.inputGain);
                                 }
                             }
+                            updateStepVisual();
                         };
+
+                        // Wheel Logic for Chords (Scroll to change chord)
+                        if (track.type === 'chord') {
+                            step.addEventListener('wheel', (e) => {
+                                if (!track.pattern[i]) return; // Only scroll if active
+                                e.preventDefault();
+                                
+                                let currentIndex = AVAILABLE_CHORDS.indexOf(track.pattern[i]);
+                                if (e.deltaY < 0) {
+                                    currentIndex = (currentIndex + 1) % AVAILABLE_CHORDS.length;
+                                } else {
+                                    currentIndex = (currentIndex - 1 + AVAILABLE_CHORDS.length) % AVAILABLE_CHORDS.length;
+                                }
+                                track.pattern[i] = AVAILABLE_CHORDS[currentIndex];
+                                updateStepVisual();
+                                
+                                if (!isRecording && playState === 'STOPPED') {
+                                    initAudio(); playChord(track.pattern[i], track.instrument, track.pitch, audioCtx.currentTime, audioCtx, track.inputGain);
+                                }
+                            });
+                        }
+                        
                         grid.appendChild(step);
                     }
                     beatContainer.appendChild(row);
                 });
+            }
 
-                // Build Vocals
+            function buildVocalInterface() {
                 vocalContainer.innerHTML = '';
                 vocalTracks.forEach((track, index) => {
                     const row = document.createElement('div'); row.className = 'track-row';
@@ -334,17 +380,14 @@
                     row.innerHTML = `
                         <div class="track-header">
                             <span style="font-weight:bold; font-size:15px; color:white;">Vocal Track ${index + 1}</span>
-                            
                             <div class="btn-group">
                                 <button class="btn-action btn-rec-overwrite" onclick="startRecording('${track.id}', false)" id="rec-btn-new-${track.id}">🔴 Overwrite</button>
                                 <button class="btn-action btn-rec-append" onclick="startRecording('${track.id}', true)" id="rec-btn-append-${track.id}">➕ Append</button>
                             </div>
-                            
                             <div class="btn-group">
                                 <button class="btn-action btn-solo" onclick="playSolo('${track.id}')">▶ Solo Audio</button>
                                 <button class="btn-action" onclick="clearTrack('${track.id}')">🗑️ Clear</button>
                             </div>
-                            
                             <div class="controls-grid" style="margin-top: 5px;">
                                 <span>Vol</span><input type="range" class="mini-slider" min="0" max="2" step="0.1" value="${track.volume}" onchange="updateVoxFX('${track.id}', 'vol', this.value)">
                                 <span>Pitch</span><input type="range" class="mini-slider" min="0.5" max="1.5" step="0.1" value="${track.pitch}" onchange="updateVoxFX('${track.id}', 'pitch', this.value)">
@@ -352,7 +395,6 @@
                                 <span>Echo</span><input type="range" class="mini-slider" min="0" max="1" step="0.1" value="${track.echo}" onchange="updateVoxFX('${track.id}', 'echo', this.value)">
                             </div>
                         </div>
-                        
                         <div class="track-viewport" id="viewport-${track.id}">
                             <div class="track-inner vocal-timeline-inner" id="timeline-${track.id}">
                                 <canvas class="grid-canvas"></canvas>
@@ -362,7 +404,6 @@
                     `;
                     vocalContainer.appendChild(row);
 
-                    // Add Ctrl+Scroll Zoom Listener
                     const viewport = row.querySelector('.track-viewport');
                     viewport.addEventListener('wheel', (e) => {
                         if (e.ctrlKey) {
@@ -439,11 +480,9 @@
                     track.delayNode.connect(track.delayFeedback); track.delayFeedback.connect(track.delayNode);
 
                     track.inputGain.connect(masterGain);
-                    
                     track.inputGain.connect(track.convolver);
                     track.convolver.connect(track.reverbMix);
                     track.reverbMix.connect(masterGain);
-                    
                     track.inputGain.connect(track.delayNode);
                     track.delayNode.connect(track.delayMix);
                     track.delayMix.connect(masterGain);
@@ -483,51 +522,41 @@
             // 5. SYNTHESIS (Drums & Piano)
             // ==========================================
             
-            // PIANO CHORD SYNTHESIS
-            function playChord(chordName, pitchMultiplier, time, context, targetDest) {
+            function playChord(chordName, instrumentType, pitchMultiplier, time, context, targetDest) {
                 if (!chordName) return;
-                // Root frequencies for Middle C octave
                 const chordMap = {
-                    'C': [261.63, 329.63, 392.00], // C, E, G
-                    'Dm': [293.66, 349.23, 440.00], // D, F, A
-                    'Em': [329.63, 392.00, 493.88], // E, G, B
-                    'F': [349.23, 440.00, 523.25], // F, A, C
-                    'G': [392.00, 493.88, 587.33], // G, B, D
-                    'Am': [440.00, 523.25, 659.25] // A, C, E
+                    'C': [261.63, 329.63, 392.00], 'Dm': [293.66, 349.23, 440.00], 'Em': [329.63, 392.00, 493.88],
+                    'F': [349.23, 440.00, 523.25], 'G': [392.00, 493.88, 587.33], 'Am': [440.00, 523.25, 659.25]
                 };
                 
                 const freqs = chordMap[chordName] || chordMap['C'];
                 
                 freqs.forEach(f => {
                     const osc1 = context.createOscillator();
-                    const osc2 = context.createOscillator();
                     const gain = context.createGain();
                     
-                    osc1.type = 'sine'; // Soft tone
-                    osc2.type = 'triangle'; // Harmonics
+                    osc1.type = instrumentType === 'synth' ? 'square' : 'sine';
+                    if(instrumentType === 'piano') {
+                        const osc2 = context.createOscillator();
+                        osc2.type = 'triangle'; osc2.frequency.value = f * pitchMultiplier;
+                        osc2.connect(gain); osc2.start(time); osc2.stop(time + 1.2);
+                    }
                     
                     osc1.frequency.value = f * pitchMultiplier;
-                    osc2.frequency.value = f * pitchMultiplier;
+                    osc1.connect(gain); gain.connect(targetDest);
                     
-                    osc1.connect(gain);
-                    osc2.connect(gain);
-                    gain.connect(targetDest);
-                    
-                    // Envelope
                     gain.gain.setValueAtTime(0, time);
-                    gain.gain.linearRampToValueAtTime(0.3, time + 0.05); // Attack
-                    gain.gain.exponentialRampToValueAtTime(0.001, time + 1.2); // Decay
+                    gain.gain.linearRampToValueAtTime(instrumentType === 'synth' ? 0.15 : 0.3, time + 0.05);
+                    gain.gain.exponentialRampToValueAtTime(0.001, time + 1.2);
                     
-                    osc1.start(time); osc2.start(time);
-                    osc1.stop(time + 1.2); osc2.stop(time + 1.2);
+                    osc1.start(time); osc1.stop(time + 1.2);
                 });
             }
 
-            // DRUM SYNTHESIS
             function playDrumSound(track, time, context = audioCtx, destination = masterGain) {
                 let targetDest = (context === audioCtx && track.inputGain) ? track.inputGain : destination;
 
-                if (track.id === 'kick') {
+                if (track.instrument === 'kick') {
                     const osc = context.createOscillator(), gain = context.createGain();
                     osc.connect(gain).connect(targetDest);
                     osc.frequency.setValueAtTime(120 * track.pitch, time); 
@@ -543,7 +572,7 @@
                     clickOsc.start(time); clickOsc.stop(time + 0.05);
                     osc.start(time); osc.stop(time + 0.8);
 
-                } else if (track.id === 'snare') {
+                } else if (track.instrument === 'snare') {
                     const noise = context.createBufferSource(), filter = context.createBiquadFilter(), gain = context.createGain();
                     let nBuffer = context.createBuffer(1, context.sampleRate * 0.5, context.sampleRate);
                     let nData = nBuffer.getChannelData(0);
@@ -558,7 +587,7 @@
                     osc.frequency.setValueAtTime(250 * track.pitch, time); oGain.gain.setValueAtTime(0.8, time); oGain.gain.exponentialRampToValueAtTime(0.01, time + 0.15);
                     osc.start(time); osc.stop(time + 0.2);
 
-                } else if (track.id === 'hihat') {
+                } else if (track.instrument === 'hihat') {
                     const noise = context.createBufferSource(), filter = context.createBiquadFilter(), gain = context.createGain();
                     let nBuffer = context.createBuffer(1, context.sampleRate * 0.1, context.sampleRate);
                     let nData = nBuffer.getChannelData(0);
@@ -580,7 +609,7 @@
                                 if (track.type === 'drum') {
                                     playDrumSound(track, nextDrumTime);
                                 } else if (track.type === 'chord') {
-                                    playChord(track.pattern[currentDrumStep], track.pitch, nextDrumTime, audioCtx, track.inputGain);
+                                    playChord(track.pattern[currentDrumStep], track.instrument, track.pitch, nextDrumTime, audioCtx, track.inputGain);
                                 }
                             }
                         });
@@ -596,7 +625,7 @@
             }
 
             // ==========================================
-            // 6. RECORDING SYSTEM (Now with Mic Selection)
+            // 6. RECORDING SYSTEM 
             // ==========================================
             window.startRecording = async (trackId, isAppend) => {
                 const btnNew = document.getElementById(`rec-btn-new-${trackId}`);
@@ -617,7 +646,6 @@
                 }
 
                 try {
-                    // Pull specific mic if selected
                     const micId = document.getElementById('micSelect').value;
                     const constraints = micId ? { audio: { deviceId: { exact: micId } } } : { audio: true };
                     
@@ -681,7 +709,7 @@
 
             function drawSyncGrids() {
                 const loopSecs = getLoopDuration();
-                const barSecs = loopSecs / 2; // Since 32 steps = 2 bars
+                const barSecs = loopSecs / 2; 
                 const beatSecs = barSecs / 4; 
                 
                 document.querySelectorAll('.grid-canvas').forEach(canvas => {
@@ -721,7 +749,7 @@
                 document.querySelectorAll('.vocal-timeline-inner').forEach(inner => {
                     if (inner.clientWidth < reqPx) {
                         inner.style.width = `${reqPx + 500}px`; 
-                        drawSyncGrids();
+                        drawSyncGrids(); // Force grid redraw when width expands
                     }
                 });
 
@@ -827,7 +855,8 @@
                     }
                     trackEl.appendChild(clipEl);
                 });
-                drawSyncGrids();
+                // Ensure grid lines redraw when elements move/scale
+                setTimeout(drawSyncGrids, 50); 
             }
 
             function handleClipDrag(e) {
@@ -1014,7 +1043,7 @@
                     conv.buffer = offlineReverbBuffer;
                     g.connect(offlineMaster); g.connect(conv); conv.connect(rMix); rMix.connect(offlineMaster);
                     g.gain.value = t.volume; rMix.gain.value = t.reverb;
-                    return { id: t.id, type: t.type, inputGain: g, pitch: t.pitch };
+                    return { id: t.id, type: t.type, instrument: t.instrument, inputGain: g, pitch: t.pitch };
                 });
 
                 const offlineVocalTracks = vocalTracks.map(t => {
@@ -1038,7 +1067,7 @@
                             if (t.type === 'drum') {
                                 playDrumSound(trackSettings, renderTime, offlineCtx, offlineMaster); 
                             } else if (t.type === 'chord') {
-                                playChord(t.pattern[step % STEPS], trackSettings.pitch, renderTime, offlineCtx, trackSettings.inputGain);
+                                playChord(t.pattern[step % STEPS], trackSettings.instrument, trackSettings.pitch, renderTime, offlineCtx, trackSettings.inputGain);
                             }
                         }
                     });
@@ -1086,7 +1115,10 @@
                 return new Blob([out], { type: "audio/wav" });
             }
 
-            buildInterface();
+            // Init
+            buildBeatInterface();
+            buildVocalInterface();
+            setTimeout(drawSyncGrids, 100); // Initial grid render
         });
     </script>
 </body>
