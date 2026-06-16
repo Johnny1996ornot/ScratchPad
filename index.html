@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scratchpad - Pro Studio V9</title>
+    <title>Scratchpad - Pro Studio V10</title>
     <style>
         /* --- CORE STYLING & DAW THEME --- */
         :root {
@@ -15,31 +15,32 @@
         }
 
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--text-main); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; user-select: none; overflow-x: hidden; }
-        .app-container { width: 100%; max-width: 1400px; display: flex; flex-direction: column; gap: 20px; }
+        .app-container { width: 100%; max-width: 1400px; display: flex; flex-direction: column; gap: 15px; }
 
-        header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
-        .logo h1 { margin: 0; font-size: 26px; font-weight: 900; letter-spacing: 2px; }
-        .logo span { color: var(--primary); font-size: 13px; text-transform: uppercase; letter-spacing: 1px; }
-        
-        .kofi-btn { background: #FFDD00; color: #000; text-decoration: none; padding: 8px 16px; border-radius: 20px; font-weight: bold; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+        /* HEADER FIX: Space-between, minimal height */
+        header { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid var(--border); margin-bottom: 5px;}
+        .logo { display: flex; align-items: baseline; gap: 10px; }
+        .logo h1 { margin: 0; font-size: 24px; font-weight: 900; letter-spacing: 2px; }
+        .logo span { color: var(--primary); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+        .kofi-btn { background: #FFDD00; color: #000; text-decoration: none; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 13px; display: flex; align-items: center; gap: 8px; }
         .kofi-btn:hover { opacity: 0.9; }
 
         .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
-        .section-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 15px; }
-        .section-title { margin: 0; font-size: 16px; color: #fff; text-transform: uppercase; letter-spacing: 1px; }
+        .section-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 12px; }
+        .section-title { margin: 0; font-size: 15px; color: #fff; text-transform: uppercase; letter-spacing: 1px; }
 
         /* --- TABS SYSTEM --- */
         .tabs-container { display: flex; gap: 5px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; border-bottom: 1px solid var(--border); }
-        .tab { padding: 8px 16px; background: #21262d; border: 1px solid var(--border); border-radius: 6px 6px 0 0; cursor: pointer; font-weight: bold; font-size: 13px; color: var(--text-muted); transition: 0.2s; display: flex; align-items: center; gap: 8px;}
+        .tab { padding: 6px 14px; background: #21262d; border: 1px solid var(--border); border-radius: 6px 6px 0 0; cursor: pointer; font-weight: bold; font-size: 12px; color: var(--text-muted); transition: 0.2s; display: flex; align-items: center; gap: 8px;}
         .tab.active { background: var(--surface); color: white; border-bottom-color: var(--surface); }
-        .tab-color-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
-        .btn-add-tab { background: transparent; color: var(--primary); border: 1px dashed var(--primary); border-radius: 6px; cursor: pointer; padding: 0 15px; font-weight: bold; }
+        .tab-color-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+        .btn-add-tab { background: transparent; color: var(--primary); border: 1px dashed var(--primary); border-radius: 6px; cursor: pointer; padding: 0 12px; font-weight: bold; font-size: 12px;}
 
         /* --- BANK CONTROLS --- */
-        .bank-controls { display: flex; gap: 20px; align-items: center; margin-bottom: 15px; background: #090c10; padding: 10px; border-radius: 8px; border: 1px solid var(--border); }
-        .slider-control { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: bold; }
-        .slider-control input { width: 100px; accent-color: var(--primary); }
-        .btn { padding: 8px 16px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; font-size: 13px; transition: 0.1s; color: white;}
+        .bank-controls { display: flex; gap: 15px; align-items: center; margin-bottom: 15px; background: #090c10; padding: 8px; border-radius: 8px; border: 1px solid var(--border); }
+        .slider-control { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: bold; }
+        .slider-control input { width: 90px; accent-color: var(--primary); }
+        .btn { padding: 6px 14px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; font-size: 12px; transition: 0.1s; color: white;}
         .btn:active { transform: scale(0.97); }
         .btn-play-loop { background: #8957e5; }
         .btn-play-loop.playing { background: var(--danger); }
@@ -47,19 +48,19 @@
         .btn-drag-source:active { cursor: grabbing; }
 
         /* --- TRACK LAYOUTS --- */
-        .track-row { display: flex; align-items: stretch; margin-bottom: 8px; border: 1px solid var(--border); border-radius: 8px; background: #090c10; }
-        .track-header { width: 260px; padding: 10px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; justify-content: center; gap: 8px; flex-shrink: 0; border-radius: 8px 0 0 8px; }
-        .track-name-dropdown { background: transparent; color: var(--primary); font-weight: bold; font-size: 14px; border: none; outline: none; cursor: pointer; }
+        .track-row { display: flex; align-items: stretch; margin-bottom: 6px; border: 1px solid var(--border); border-radius: 8px; background: #090c10; }
+        .track-header { width: 260px; padding: 8px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; justify-content: center; gap: 6px; flex-shrink: 0; border-radius: 8px 0 0 8px; }
+        .track-name-dropdown { background: transparent; color: var(--primary); font-weight: bold; font-size: 13px; border: none; outline: none; cursor: pointer; }
         .track-name-dropdown option { background: var(--surface); color: white; }
         
-        .track-viewport { flex: 1; overflow-x: auto; overflow-y: hidden; position: relative; display: flex; align-items: center; padding: 5px 0; background: #0d1117;}
+        .track-viewport { flex: 1; overflow-x: auto; overflow-y: hidden; position: relative; display: flex; align-items: center; padding: 4px 0; background: #0d1117;}
         .track-inner { position: relative; height: 100%; min-width: 100%; }
 
         /* --- CONTROLS & FX --- */
-        .controls-grid { display: grid; grid-template-columns: 40px 1fr; gap: 5px; align-items: center; font-size: 10px; color: var(--text-muted); font-weight: bold; }
-        .mini-slider { width: 100%; height: 3px; accent-color: var(--primary); cursor: pointer; }
+        .controls-grid { display: grid; grid-template-columns: 40px 1fr; gap: 4px; align-items: center; font-size: 10px; color: var(--text-muted); font-weight: bold; }
+        .mini-slider { width: 100%; height: 3px; accent-color: var(--primary); cursor: pointer; margin: 0;}
 
-        .btn-group { display: flex; gap: 6px; }
+        .btn-group { display: flex; gap: 4px; }
         .btn-action { flex: 1; background: transparent; border: 1px solid var(--border); color: var(--text-main); padding: 4px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 10px; text-align: center; }
         .btn-action:hover { background: rgba(255,255,255,0.05); }
         .btn-rec-overwrite { border-color: var(--danger); color: var(--danger); }
@@ -70,8 +71,8 @@
         @keyframes pulse { 50% { opacity: 0.6; } }
 
         /* --- SEQUENCER GRID --- */
-        .drum-grid { display: grid; gap: 2px; height: 36px; width: 100%; }
-        .step { background: #21262d; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; color: black; border: 1px solid #161b22; }
+        .drum-grid { display: grid; gap: 2px; height: 34px; width: 100%; }
+        .step { background: #21262d; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; color: black; border: 1px solid #161b22; }
         .step.start-beat { border-left: 2px solid rgba(88, 166, 255, 0.4); }
         .step.start-bar { border-left: 3px solid rgba(255, 255, 255, 0.6); }
         .step.active.type-kick { background: var(--drum-kick); box-shadow: 0 0 10px rgba(255,123,114,0.3); }
@@ -82,26 +83,41 @@
 
         /* CHORD MENU */
         .chord-menu { position: fixed; background: var(--surface); border: 1px solid var(--border); padding: 5px; border-radius: 6px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; z-index: 1000; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
-        .chord-btn { background: #21262d; border: none; color: white; padding: 8px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+        .chord-btn { background: #21262d; border: none; color: white; padding: 6px 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 11px;}
         .chord-btn:hover { background: var(--primary); color: black; }
         .chord-btn.off { background: var(--danger); grid-column: span 3; }
 
-        /* --- STUDIO ARRANGER --- */
-        .studio-controls { display: flex; align-items: center; gap: 12px; background: #090c10; padding: 12px 15px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 15px; flex-wrap: wrap;}
-        .btn-master-full { background: var(--primary); font-size: 14px; padding: 10px 20px;}
-        .btn-download { background: var(--accent); font-size: 14px; padding: 10px 20px;}
-        .btn-save { background: #8957e5; font-size: 14px; padding: 10px 20px;}
+        /* --- STUDIO ARRANGER (CENTERED & COMPACT) --- */
+        .studio-controls { 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; /* Centered layout */
+            gap: 12px; 
+            background: #090c10; 
+            padding: 10px 15px; 
+            border-radius: 8px; 
+            border: 1px solid var(--border); 
+            margin-bottom: 12px; 
+            flex-wrap: nowrap; /* Forces single line */
+            overflow-x: auto; /* Scroll if screen is too small */
+        }
+        .btn-master-full { background: var(--primary); font-size: 13px; padding: 8px 16px;}
+        .btn-download { background: var(--accent); font-size: 13px; padding: 8px 16px;}
+        .btn-save { background: #8957e5; font-size: 13px; padding: 8px 16px;}
+        
+        /* Restrict Mic Selection width so it doesn't elongate */
+        .mic-select { background: var(--surface); color: white; padding: 6px; border-radius:6px; border:1px solid var(--border); max-width: 160px; font-size: 12px; text-overflow: ellipsis;}
         
         .timeline-inner { height: 90px; position: relative; background: #090c10; }
         .grid-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 15; opacity: 0.3; }
 
         /* Arranger Clips */
-        .clip { position: absolute; height: 75%; top: 12.5%; border-radius: 6px; overflow: hidden; box-shadow: 0 4px 8px rgba(0,0,0,0.4); z-index: 5; display: flex; flex-direction: column; font-size: 12px; font-weight: bold; text-shadow: 0 1px 2px rgba(0,0,0,0.8); cursor: grab;}
+        .clip { position: absolute; height: 75%; top: 12.5%; border-radius: 6px; overflow: hidden; box-shadow: 0 4px 8px rgba(0,0,0,0.4); z-index: 5; display: flex; flex-direction: column; font-size: 11px; font-weight: bold; text-shadow: 0 1px 2px rgba(0,0,0,0.8); cursor: grab;}
         .clip:active { cursor: grabbing; }
         .clip.selected { box-shadow: 0 0 0 2px yellow; z-index: 10; border-color: yellow; }
         
         .clip-beat { color: white; border: 1px solid rgba(255,255,255,0.3); }
-        .clip-beat .clip-label { padding: 2px 5px; background: rgba(0,0,0,0.5); width: 100%; box-sizing: border-box; z-index: 2;}
+        .clip-beat .clip-label { padding: 2px 5px; background: rgba(0,0,0,0.7); width: 100%; box-sizing: border-box; z-index: 2; border-bottom: 1px solid rgba(255,255,255,0.2);}
         .clip-vocal { background: #1f6feb; border: 2px solid #79c0ff; justify-content: center; align-items: center;}
         
         .wave-canvas { width: 100%; height: 100%; display: block; pointer-events: none; position: absolute; top:0; left:0; z-index: 1;}
@@ -114,7 +130,7 @@
         .playhead-beat { position: absolute; top: -2px; bottom: -2px; width: 3px; background: #ffffff; pointer-events: none; display: none; z-index: 20; border-radius: 2px; box-shadow: 0 0 10px rgba(255,255,255,0.8);}
 
         /* Vocal Tools */
-        .btn-tool { background: var(--surface); border: 1px solid var(--border); color: white; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer;}
+        .btn-tool { background: var(--surface); border: 1px solid var(--border); color: white; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px;}
         .btn-tool.active { background: var(--warning); color: black; border-color: var(--warning); }
         .btn-tool:hover { filter: brightness(1.2); }
         .cursor-razor .clip { cursor: crosshair !important; }
@@ -127,9 +143,9 @@
         <header>
             <div class="logo">
                 <h1>SCRATCHPAD</h1>
-                <span>Pro Arranger V9</span>
+                <span>Pro Arranger</span>
             </div>
-            <a href="https://buymeacoffee.com/" target="_blank" class="kofi-btn">☕ Support Project</a>
+            <a href="https://buymeacoffee.com/" target="_blank" class="kofi-btn">☕ Support</a>
         </header>
 
         <div class="panel">
@@ -142,10 +158,10 @@
             </div>
 
             <div class="bank-controls">
-                <button id="btnPlayLoop" class="btn btn-play-loop">▶ Play Current Loop</button>
+                <button id="btnPlayLoop" class="btn btn-play-loop">▶ Play Loop</button>
                 <div class="slider-control">
                     <span>Grid:</span>
-                    <select id="gridSelect" onchange="updateCurrentGrid(this.value)" style="background: var(--surface); color: white; padding: 4px; border-radius:4px; border:1px solid var(--border);">
+                    <select id="gridSelect" onchange="updateCurrentGrid(this.value)" style="background: var(--surface); color: white; padding: 4px; border-radius:4px; border:1px solid var(--border); font-size: 11px;">
                         <option value="4">4 Steps</option>
                         <option value="16" selected>16 Steps</option>
                         <option value="32">32 Steps</option>
@@ -162,27 +178,26 @@
             </div>
 
             <div id="pattern-editor-container"></div>
-            <button class="btn" style="background: var(--surface); border: 1px dashed var(--primary); color: var(--primary); margin-top: 10px; width: 100%;" onclick="addTrackToCurrentPattern()">➕ Add Instrument to Pattern</button>
+            <button class="btn" style="background: var(--surface); border: 1px dashed var(--primary); color: var(--primary); margin-top: 10px; width: 100%;" onclick="addTrackToCurrentPattern()">➕ Add Instrument</button>
         </div>
 
         <div class="panel">
             <div class="section-header">
                 <h2 class="section-title">2. Master Arranger (Timeline)</h2>
-                <div style="font-size: 12px; color: var(--text-muted);">Zoom Timeline: Hold Ctrl + Mouse Wheel</div>
+                <div style="font-size: 11px; color: var(--text-muted);">Zoom Timeline: Hold Ctrl + Mouse Wheel</div>
             </div>
 
             <div class="studio-controls">
                 <button id="btnPlayFull" class="btn btn-master-full">▶ Play Studio Mix</button>
-                <div style="width: 1px; height: 30px; background: var(--border); margin: 0 5px;"></div>
+                <div style="width: 1px; height: 20px; background: var(--border); margin: 0 2px;"></div>
                 
-                <select id="micSelect" style="background: var(--surface); color: white; padding: 8px; border-radius:6px; border:1px solid var(--border); min-width: 150px;"><option value="">Detecting Mics...</option></select>
+                <select id="micSelect" class="mic-select"><option value="">Detecting Mics...</option></select>
                 <button class="btn-tool" id="btnRazorTool">✂️ Split Tool: OFF</button>
                 <button class="btn-tool" id="btnDeleteClip" style="color: var(--danger); border-color: var(--danger);">🗑️ Delete</button>
                 
-                <div style="flex: 1;"></div> <button id="btnSaveProject" class="btn btn-save">💾 Save Project</button>
-                <label class="btn btn-save" style="background: var(--surface); border: 1px solid var(--border); display:inline-block; cursor:pointer;">
-                    📂 Load <input type="file" id="fileLoadProject" accept=".json" style="display:none;">
-                </label>
+                <div style="width: 1px; height: 20px; background: var(--border); margin: 0 2px;"></div>
+                
+                <button id="btnSaveHtml" class="btn btn-save">💾 Export Interactive HTML</button>
                 <button id="btnDownload" class="btn btn-download">⬇ Export .WAV</button>
             </div>
 
@@ -230,7 +245,7 @@
         ];
 
         // ==========================================
-        // 2. DATA INITIALIZATION
+        // 2. DATA INITIALIZATION & HYDRATION
         // ==========================================
         function createNewPattern() {
             const pid = `pat-${patternIdCounter++}`;
@@ -253,9 +268,21 @@
             };
         }
 
-        function initApp() {
-            if(patterns.length === 0) {
-                patterns.push(createNewPattern()); activePatternId = patterns[0].id;
+        async function initApp() {
+            // HTML Hydration Check
+            if (window.__PRELOADED_STATE__) {
+                const data = window.__PRELOADED_STATE__;
+                patterns = data.patterns; activePatternId = data.activePatternId; arrangerClips = data.arrangerClips;
+                data.vocalTracks.forEach(vt => { const t = vocalTracks.find(tt => tt.id === vt.id); if(t) { t.volume=vt.volume; t.pitch=vt.pitch; t.reverb=vt.reverb; t.echo=vt.echo; }});
+                vocalClips = [];
+                buildAudioGraph(); // Ensure audio context exists for decoding
+                for(let c of data.vocalClips) { 
+                    vocalClips.push({ id: c.id, trackId: c.trackId, startTime: c.startTime, duration: c.duration, buffer: await base64ToAudioBuffer(c.base64) }); 
+                }
+            } else {
+                if(patterns.length === 0) {
+                    patterns.push(createNewPattern()); activePatternId = patterns[0].id;
+                }
             }
             renderTabs(); renderActivePattern(); renderArranger(); initMicDetect();
         }
@@ -352,12 +379,13 @@
             offBtn.onclick = () => { track.pattern[stepIndex] = false; updateVis(); container.innerHTML = ''; };
             menu.appendChild(offBtn); container.appendChild(menu);
         }
+
+        // Global Mousedown for Selection & Menus
         document.body.addEventListener('mousedown', (e) => { 
-            // Close chord menu
             if(!e.target.closest('.chord-menu') && !e.target.closest('.step')) document.getElementById('chordMenuContainer').innerHTML = ''; 
             
-            // Delete Fix: Clear selection only if clicking background, not clips and not studio controls
-            if(!e.target.closest('.clip') && !e.target.closest('.studio-controls') && !e.target.closest('.track-header')) {
+            // Delete Fix: Clear selection only if clicking empty background, not controls or headers
+            if(!e.target.closest('.clip') && !e.target.closest('.studio-controls') && !e.target.closest('.track-header') && !e.target.closest('.tabs-container')) {
                 selectedClipId = null;
                 document.querySelectorAll('.clip').forEach(el => el.classList.remove('selected'));
             }
@@ -385,7 +413,7 @@
 
             const beatRow = document.createElement('div'); beatRow.className = 'track-row';
             beatRow.innerHTML = `
-                <div class="track-header"><span style="color:white; font-weight:bold; font-size:15px;">Master Beat Track</span><span style="font-size:11px; color:var(--text-muted);">Drop pattern blocks here</span></div>
+                <div class="track-header"><span style="color:white; font-weight:bold; font-size:14px;">Master Beat Track</span><span style="font-size:10px; color:var(--text-muted);">Drop pattern blocks here</span></div>
                 <div class="track-viewport" ondragover="event.preventDefault()" ondrop="handlePatternDrop(event, 'beat')">
                     <div class="track-inner timeline-inner" id="timeline-beat"><canvas class="grid-canvas"></canvas><div id="ph-abs-beat" class="playhead-absolute"></div></div>
                 </div>
@@ -396,7 +424,7 @@
                 const row = document.createElement('div'); row.className = 'track-row';
                 row.innerHTML = `
                     <div class="track-header">
-                        <span style="font-weight:bold; font-size:15px; color:white;">Vocal Track ${idx + 1}</span>
+                        <span style="font-weight:bold; font-size:14px; color:white;">Vocal Track ${idx + 1}</span>
                         <div class="btn-group">
                             <button class="btn-action btn-rec-overwrite" onclick="startRecording('${track.id}', false)" id="rec-btn-new-${track.id}">🔴 Record</button>
                             <button class="btn-action btn-rec-append" onclick="startRecording('${track.id}', true)" id="rec-btn-append-${track.id}">➕ Append</button>
@@ -450,23 +478,27 @@
                 const el = document.createElement('div'); el.className = `clip clip-beat ${clip.id === selectedClipId ? 'selected' : ''}`; el.id = clip.id;
                 el.style.left = `${clip.startTime * PPS}px`; el.style.width = `${clip.duration * PPS}px`; el.style.background = p.color; 
                 
-                // VISUAL FIX: Draw the internal step lines so user isn't guessing while stretching
                 el.innerHTML = `<div class="clip-label">${p.name}</div><canvas class="wave-canvas"></canvas>`;
                 const handle = document.createElement('div'); handle.className = 'resize-handle'; handle.onmousedown = (e) => handleClipStretch(e, clip);
                 el.appendChild(handle); el.onmousedown = (e) => { if(!e.target.classList.contains('resize-handle')) handleClipDrag(e, clip, true); };
                 beatTimeline.appendChild(el); 
 
-                // Draw steps on canvas
+                // BEAT VISUAL FIX: Draw specific track lanes
                 const cvs = el.querySelector('canvas'); const ctx = cvs.getContext('2d');
                 const w = clip.duration * PPS; cvs.width = w; cvs.height = 70;
                 const stepPx = (60 / p.tempo / 4) * PPS;
                 const totalSteps = Math.floor(clip.duration / (60 / p.tempo / 4));
+                const trackHeight = 50 / p.tracks.length; // Space below label
                 
                 for(let i=0; i<totalSteps; i++) {
                     const sIdx = i % p.steps;
-                    const hasHit = p.tracks.some(t => t.pattern[sIdx]);
-                    if(hasHit) { ctx.fillStyle = 'rgba(255,255,255,0.6)'; ctx.fillRect(i * stepPx, 20, Math.max(2, stepPx - 2), 50); }
-                    if(sIdx === 0) { ctx.fillStyle = 'rgba(255,255,255,0.8)'; ctx.fillRect(i * stepPx, 0, 2, 70); } // Bar line
+                    p.tracks.forEach((track, tIdx) => {
+                        if(track.pattern[sIdx]) { 
+                            ctx.fillStyle = track.type === 'drum' ? 'rgba(255,255,255,0.8)' : 'rgba(227, 179, 65, 0.9)'; 
+                            ctx.fillRect(i * stepPx, 20 + (tIdx * trackHeight), Math.max(2, stepPx - 1), trackHeight - 2); 
+                        }
+                    });
+                    if(sIdx === 0) { ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.fillRect(i * stepPx, 20, 1, 50); } // Bar line
                 }
 
                 if (clip.startTime + clip.duration > maxAudioSecs) maxAudioSecs = clip.startTime + clip.duration;
@@ -657,7 +689,6 @@
             }
         }
 
-        // V6 PIANO SYNTHESIS RESTORED
         function playChord(chord, type, pitch, time, context=audioCtx, dest=masterGain) {
             const freqs = {'C':[261,329,392],'Dm':[293,349,440],'Em':[329,392,493],'F':[349,440,523],'G':[392,493,587],'Am':[440,523,659]}[chord] || [261,329,392];
             freqs.forEach(f => {
@@ -783,7 +814,7 @@
             vocalClips.forEach(c => { if(c.sourceNode) { try{c.sourceNode.stop();}catch(e){} } });
             
             document.getElementById('btnPlayFull').innerText = "▶ Play Studio Mix"; document.getElementById('btnPlayFull').classList.remove('playing');
-            document.getElementById('btnPlayLoop').innerText = "▶ Play Current Loop"; document.getElementById('btnPlayLoop').classList.remove('playing');
+            document.getElementById('btnPlayLoop').innerText = "▶ Play Loop"; document.getElementById('btnPlayLoop').classList.remove('playing');
             document.querySelectorAll('.btn-rec-append').forEach(btn => { btn.classList.remove('is-waiting', 'is-recording'); btn.innerText = '➕ Append'; });
             document.querySelectorAll('.btn-rec-overwrite').forEach(btn => { btn.classList.remove('is-recording'); });
             updateRecordButtons();
@@ -841,10 +872,8 @@
         }
 
         // ==========================================
-        // 7. SAVE PROJECT (.JSON) & EXPORT (.WAV)
+        // 7. EXPORT HTML & WAV ENGINE
         // ==========================================
-        
-        // Helper to convert AudioBuffer to Base64 String for JSON save
         function audioBufferToBase64(buffer) {
             const numOfChan = buffer.numberOfChannels, length = buffer.length * numOfChan * 2 + 44;
             const out = new ArrayBuffer(length), view = new DataView(out);
@@ -866,17 +895,16 @@
         }
 
         async function base64ToAudioBuffer(base64) {
-            buildAudioGraph();
             const binaryString = window.atob(base64); const len = binaryString.length; const bytes = new Uint8Array(len);
             for (let i = 0; i < len; i++) { bytes[i] = binaryString.charCodeAt(i); }
             return await audioCtx.decodeAudioData(bytes.buffer);
         }
 
-        document.getElementById('btnSaveProject').addEventListener('click', () => {
-            const btn = document.getElementById('btnSaveProject');
-            const orig = btn.innerText; btn.innerText = '⏳ Saving...'; btn.disabled = true;
+        // Export Standalone HTML file with embedded state
+        document.getElementById('btnSaveHtml').addEventListener('click', () => {
+            const btn = document.getElementById('btnSaveHtml');
+            const orig = btn.innerText; btn.innerText = '⏳ Bundling HTML...'; btn.disabled = true;
             
-            // Wait slightly for UI to update before heavy encoding
             setTimeout(() => {
                 const project = {
                     patterns: patterns, activePatternId: activePatternId, arrangerClips: arrangerClips,
@@ -884,29 +912,27 @@
                     vocalClips: vocalClips.map(c => ({ id: c.id, trackId: c.trackId, startTime: c.startTime, duration: c.duration, base64: audioBufferToBase64(c.buffer) }))
                 };
                 
-                const blob = new Blob([JSON.stringify(project)], {type: "application/json"});
+                const clone = document.documentElement.cloneNode(true);
+                clone.querySelector('#tabsContainer').innerHTML = '<button class="btn-add-tab" onclick="addPatternTab()">+ New Beat</button>';
+                clone.querySelector('#pattern-editor-container').innerHTML = '';
+                clone.querySelector('#arranger-container').innerHTML = '';
+                clone.querySelectorAll('.chord-menu').forEach(e => e.remove());
+                
+                const oldScript = clone.querySelector('#preload-data');
+                if(oldScript) oldScript.remove();
+                
+                const stateScript = document.createElement('script');
+                stateScript.id = 'preload-data';
+                stateScript.textContent = `window.__PRELOADED_STATE__ = ${JSON.stringify(project)};`;
+                clone.querySelector('body').appendChild(stateScript);
+                
+                const htmlStr = "<!DOCTYPE html>\n" + clone.outerHTML;
+                const blob = new Blob([htmlStr], {type: "text/html"});
                 const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-                a.download = 'Scratchpad_Project.json'; a.click();
+                a.download = 'Scratchpad_Project.html'; a.click();
                 
                 btn.innerText = orig; btn.disabled = false;
             }, 50);
-        });
-
-        document.getElementById('fileLoadProject').addEventListener('change', async (e) => {
-            const file = e.target.files[0]; if(!file) return;
-            const reader = new FileReader();
-            reader.onload = async (event) => {
-                try {
-                    const data = JSON.parse(event.target.result);
-                    patterns = data.patterns; activePatternId = data.activePatternId; arrangerClips = data.arrangerClips;
-                    data.vocalTracks.forEach(vt => { const t = vocalTracks.find(tt => tt.id === vt.id); if(t) { t.volume=vt.volume; t.pitch=vt.pitch; t.reverb=vt.reverb; t.echo=vt.echo; }});
-                    vocalClips = [];
-                    for(let c of data.vocalClips) { vocalClips.push({ id: c.id, trackId: c.trackId, startTime: c.startTime, duration: c.duration, buffer: await base64ToAudioBuffer(c.base64) }); }
-                    renderTabs(); renderActivePattern(); renderArranger();
-                    alert("Project Loaded Successfully!");
-                } catch(err) { alert("Failed to load project file."); }
-            };
-            reader.readAsText(file);
         });
 
         document.getElementById('btnDownload').addEventListener('click', async (e) => {
