@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scratchpad - Pro Studio V11</title>
+    <title>Scratchpad - Pro Studio V12</title>
     <style>
         /* --- CORE STYLING & DAW THEME --- */
         :root {
@@ -16,7 +16,6 @@
 
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--text-main); margin: 0; padding: 20px; user-select: none; overflow-x: hidden; }
         
-        /* NEW LAYOUT: SIDEBAR + MAIN WORKSPACE */
         .app-container { display: flex; gap: 20px; max-width: 1500px; margin: 0 auto; align-items: flex-start; }
         
         .sidebar { width: 220px; flex-shrink: 0; display: flex; flex-direction: column; gap: 20px; position: sticky; top: 20px; }
@@ -51,7 +50,7 @@
         .btn { padding: 6px 14px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; font-size: 12px; color: white;}
         .btn:active { transform: scale(0.97); }
         .btn-play-loop { background: #8957e5; }
-        .btn-play-loop.playing { background: var(--danger); }
+        .btn-play-loop.playing { background: var(--warning); color: #000;}
         .btn-drag-source { background: transparent; border: 1px dashed white; cursor: grab; padding: 6px 12px; border-radius: 6px; }
 
         /* --- TRACK LAYOUTS --- */
@@ -72,6 +71,7 @@
         .btn-rec-overwrite { border-color: var(--danger); color: var(--danger); }
         .btn-rec-append { border-color: var(--warning); color: var(--warning); }
         .btn-solo { border-color: var(--primary); color: var(--primary); }
+        .btn-solo.playing { background: var(--warning); color: #000; border-color: var(--warning); }
         .btn-rec-overwrite.is-recording, .btn-rec-append.is-recording { background: var(--danger); color: white; border-color: var(--danger); animation: pulse 1s infinite; }
         .btn-rec-append.is-waiting { background: var(--warning); color: #000; animation: pulse 1s infinite; }
         @keyframes pulse { 50% { opacity: 0.6; } }
@@ -93,9 +93,12 @@
         .chord-btn.off { background: var(--danger); grid-column: span 3; }
 
         /* --- STUDIO ARRANGER --- */
-        .studio-controls { display: flex; align-items: center; justify-content: center; gap: 12px; background: #090c10; padding: 10px 15px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 12px; flex-wrap: nowrap; overflow-x: auto; }
+        .studio-controls { display: flex; align-items: center; justify-content: flex-start; gap: 12px; background: #090c10; padding: 10px 15px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 12px; flex-wrap: nowrap; overflow-x: auto; }
         .btn-master-full { background: var(--primary); font-size: 13px; padding: 8px 16px;}
-        .mic-select { background: var(--surface); color: white; padding: 6px; border-radius:6px; border:1px solid var(--border); max-width: 160px; font-size: 12px;}
+        .btn-master-full.playing { background: var(--warning); color: black;}
+        
+        /* Expanded Mic Selector */
+        .mic-select { background: var(--surface); color: white; padding: 6px; border-radius:6px; border:1px solid var(--border); width: 100%; max-width: 350px; font-size: 12px;}
         
         .timeline-inner { height: 90px; position: relative; background: #090c10; }
         .grid-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 15; opacity: 0.3; }
@@ -105,8 +108,6 @@
         .clip.selected { box-shadow: 0 0 0 2px yellow; z-index: 10; border-color: yellow; }
         
         .clip-beat { color: white; border: 1px solid rgba(255,255,255,0.3); position: relative;}
-        
-        /* FIX: Centered Text Overlay */
         .clip-beat .clip-label { position: absolute; top:0; left:0; width:100%; height:100%; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.4); z-index: 2; pointer-events: none; text-align: center;}
         .clip-vocal { background: #1f6feb; border: 2px solid #79c0ff; justify-content: center; align-items: center;}
         
@@ -119,8 +120,6 @@
         /* PLAYHEADS */
         .playhead-dynamic { position: absolute; top: 0; height: 100%; width: 2px; background: var(--danger); pointer-events: none; display: none; z-index: 30; box-shadow: 0 0 10px var(--danger); }
         .playhead-beat { position: absolute; top: -2px; bottom: -2px; width: 3px; background: #ffffff; pointer-events: none; display: none; z-index: 20; border-radius: 2px; box-shadow: 0 0 10px rgba(255,255,255,0.8);}
-        
-        /* NEW: User Placed Playhead Marker */
         .playhead-user-marker { position: absolute; top: 0; height: 100%; width: 2px; background: #e3b341; pointer-events: none; z-index: 25; box-shadow: 0 0 10px #e3b341; display: none;}
 
         .btn-tool { background: var(--surface); border: 1px solid var(--border); color: white; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px;}
@@ -138,7 +137,7 @@
                 <span>Pro Arranger</span>
             </div>
             
-            <a href="https://buymeacoffee.com/" target="_blank" class="kofi-btn">☕ Support Project</a>
+            <a href="YOUR_LINK_HERE" target="_blank" class="kofi-btn">☕ Support Project</a>
 
             <div class="export-menu">
                 <h3>📤 Export Project</h3>
@@ -154,15 +153,13 @@
                     🎵 Compressed Audio (.WEBM)
                     <span>Small file size (MP3 Browser Alternative).</span>
                 </button>
-                <div style="font-size: 9px; color: var(--text-muted); text-align: center; margin-top: 5px;">
-                    Browsers cannot natively encode .MP3 offline. Use WebM for compressed sharing.
-                </div>
             </div>
 
             <div class="export-menu">
                 <h3>⌨️ Shortcuts</h3>
                 <div style="font-size: 11px; color: var(--text-muted); line-height: 1.6;">
                     <b>Click track:</b> Place Playhead<br>
+                    <b>S:</b> Split at Playhead<br>
                     <b>Ctrl + Z:</b> Undo Action<br>
                     <b>Ctrl + C:</b> Copy Clip<br>
                     <b>Ctrl + V:</b> Paste Clip<br>
@@ -215,7 +212,8 @@
                     <div style="width: 1px; height: 20px; background: var(--border); margin: 0 2px;"></div>
                     
                     <select id="micSelect" class="mic-select"><option value="">Detecting Mics...</option></select>
-                    <button class="btn-tool" id="btnRazorTool">✂️ Split Tool: OFF</button>
+                    <button class="btn-tool" onclick="splitSelectedClipAtPlayhead()">✂️ Split at Playhead (S)</button>
+                    <button class="btn-tool" id="btnRazorTool">✂️ Split Tool (Click)</button>
                     <button class="btn-tool" id="btnDeleteClip" style="color: var(--danger); border-color: var(--danger);">🗑️ Delete</button>
                 </div>
 
@@ -244,9 +242,9 @@
         let arrangerClips = []; let vocalClips = []; 
         let clipboardData = null; 
         
-        // PUNCH-IN PLAYHEAD STATE
+        // PUNCH-IN & PAUSE STATE
         let userPlayheadTime = 0.0;
-        let undoHistory = []; // Stack for Ctrl+Z
+        let undoHistory = []; 
 
         let vocalTracks = [
             { id: 'vox-1', volume: 1.0, pitch: 1.0, reverb: 0.0, echo: 0.0, inputGain: null, reverbMix: null, delayNode: null },
@@ -271,10 +269,9 @@
         // 2. DATA & UNDO SYSTEM
         // ==========================================
         function saveHistoryState() {
-            // Push a deep copy of clip metadata to undo stack
             undoHistory.push({
                 arrangerClips: arrangerClips.map(c => ({...c})),
-                vocalClips: vocalClips.map(c => ({...c})) // AudioBuffers are passed by reference, which is fine
+                vocalClips: vocalClips.map(c => ({...c}))
             });
             if (undoHistory.length > 30) undoHistory.shift(); 
         }
@@ -408,9 +405,8 @@
         }
 
         function handleTimelineClick(e, trackInner) {
-            if (e.target.closest('.clip') || e.target.closest('.resize-handle')) return; // Ignore if clicking a clip
+            if (e.target.closest('.clip') || e.target.closest('.resize-handle')) return; 
             const rect = trackInner.getBoundingClientRect();
-            const vp = trackInner.closest('.track-viewport');
             const x = e.clientX - rect.left;
             userPlayheadTime = Math.max(0, x / PPS);
             updateUserPlayheadVisuals();
@@ -448,7 +444,7 @@
                             <button class="btn-action btn-rec-append" onclick="startRecording('${track.id}', true)" id="rec-btn-append-${track.id}" title="Records from placed playhead">➕ Append / Punch</button>
                         </div>
                         <div class="btn-group">
-                            <button class="btn-action btn-solo" onclick="playSolo('${track.id}')">▶ Solo</button>
+                            <button class="btn-action btn-solo" id="btn-solo-${track.id}" onclick="togglePlaySolo('${track.id}')">▶ Solo</button>
                             <button class="btn-action" onclick="clearVocalTrack('${track.id}')">🗑️ Clear</button>
                         </div>
                         <div class="controls-grid" style="margin-top: 5px;">
@@ -482,7 +478,7 @@
         window.handlePatternDragStart = (e) => { e.dataTransfer.setData('text/plain', activePatternId); };
         window.handlePatternDrop = (e, targetTrackId) => {
             if(targetTrackId !== 'beat') return; 
-            saveHistoryState(); // UNDO
+            saveHistoryState();
             const pId = e.dataTransfer.getData('text/plain'); const p = patterns.find(pat => pat.id === pId); if(!p) return;
             const rect = e.target.closest('.timeline-inner').getBoundingClientRect(); const dropX = e.clientX - rect.left;
             const duration = (60 / p.tempo / 4) * p.steps;
@@ -494,7 +490,6 @@
             document.querySelectorAll('.clip, .recording-block').forEach(el => el.remove());
             let maxAudioSecs = 20;
 
-            // Render Beats
             const beatTimeline = document.getElementById('timeline-beat');
             arrangerClips.forEach(clip => {
                 const p = patterns.find(pat => pat.id === clip.patternId);
@@ -522,7 +517,6 @@
                 if (clip.startTime + clip.duration > maxAudioSecs) maxAudioSecs = clip.startTime + clip.duration;
             });
 
-            // Render Vocals
             vocalClips.forEach(clip => {
                 const tl = document.getElementById(`timeline-${clip.trackId}`); if(!tl) return;
                 const el = document.createElement('div'); el.className = `clip clip-vocal ${clip.id === selectedClipId ? 'selected' : ''}`; el.id = clip.id;
@@ -555,11 +549,14 @@
             const startX = e.clientX; const startT = clip.startTime; let hasMoved = false;
             
             const onMove = (mEv) => {
-                if(!hasMoved) { saveHistoryState(); hasMoved = true; } // Save state on first actual move
+                if(!hasMoved) { saveHistoryState(); hasMoved = true; } 
                 let targetTrackId = clip.trackId;
                 if(!isBeat) {
-                    document.querySelectorAll('.vocal-timeline-inner').forEach(tEl => {
-                        const r = tEl.getBoundingClientRect(); if (mEv.clientY >= r.top && mEv.clientY <= r.bottom) targetTrackId = tEl.id.replace('timeline-', '');
+                    document.querySelectorAll('.track-viewport').forEach(tEl => {
+                        const inner = tEl.querySelector('.timeline-inner');
+                        if (inner && inner.id.startsWith('timeline-vox')) {
+                            const r = tEl.getBoundingClientRect(); if (mEv.clientY >= r.top && mEv.clientY <= r.bottom) targetTrackId = inner.id.replace('timeline-', '');
+                        }
                     });
                 }
                 clip.startTime = Math.max(0, startT + ((mEv.clientX - startX) / PPS));
@@ -573,7 +570,7 @@
         async function handleClipSplit(e, clip, isBeat) {
             const r = e.target.closest('.clip').getBoundingClientRect(); const ratio = (e.clientX - r.left) / r.width;
             if(ratio <= 0.05 || ratio >= 0.95) return;
-            saveHistoryState(); // UNDO
+            saveHistoryState();
             
             if (isBeat) {
                 const origD = clip.duration; clip.duration = origD * ratio;
@@ -588,11 +585,44 @@
             renderClips();
         }
 
+        // NEW: Split Selected Clip at Playhead
+        window.splitSelectedClipAtPlayhead = () => {
+            if (!selectedClipId || userPlayheadTime <= 0) return;
+            saveHistoryState();
+            
+            // Search Beats
+            let clipIndex = arrangerClips.findIndex(c => c.id === selectedClipId);
+            if (clipIndex !== -1) {
+                const clip = arrangerClips[clipIndex];
+                if (userPlayheadTime > clip.startTime && userPlayheadTime < clip.startTime + clip.duration) {
+                    const ratio = (userPlayheadTime - clip.startTime) / clip.duration;
+                    const origD = clip.duration; clip.duration = origD * ratio;
+                    arrangerClips.push({ id: `aclip-${clipIdCounter++}`, patternId: clip.patternId, startTime: clip.startTime + clip.duration, duration: origD * (1 - ratio) });
+                    renderClips(); return;
+                }
+            }
+            
+            // Search Vocals
+            clipIndex = vocalClips.findIndex(c => c.id === selectedClipId);
+            if (clipIndex !== -1) {
+                const clip = vocalClips[clipIndex];
+                if (userPlayheadTime > clip.startTime && userPlayheadTime < clip.startTime + clip.duration) {
+                    const ratio = (userPlayheadTime - clip.startTime) / clip.duration;
+                    const splitS = Math.floor(clip.buffer.length * ratio);
+                    const b1 = audioCtx.createBuffer(1, splitS, audioCtx.sampleRate); const b2 = audioCtx.createBuffer(1, clip.buffer.length - splitS, audioCtx.sampleRate);
+                    b1.copyToChannel(clip.buffer.getChannelData(0).slice(0, splitS), 0); b2.copyToChannel(clip.buffer.getChannelData(0).slice(splitS), 0);
+                    clip.buffer = b1; const origD = clip.duration; clip.duration = origD * ratio;
+                    vocalClips.push({ id: `clip-${clipIdCounter++}`, buffer: b2, trackId: clip.trackId, startTime: clip.startTime + clip.duration, duration: origD * (1 - ratio) });
+                    renderClips();
+                }
+            }
+        };
+
         window.addEventListener('keydown', (e) => {
             if (isRecording || isWaitingToPunchIn || e.target.tagName === 'INPUT') return;
             
-            // Undo Mapping
             if (e.ctrlKey && e.key === 'z') { e.preventDefault(); triggerUndo(); return;}
+            if (e.key === 's' || e.key === 'S') { splitSelectedClipAtPlayhead(); return; }
 
             if (selectedClipId) {
                 if (e.key === 'Delete' || e.key === 'Backspace') { deleteSelectedClip(); }
@@ -615,19 +645,14 @@
 
         document.getElementById('btnRazorTool').addEventListener('click', (e) => {
             isRazorMode = !isRazorMode; 
-            e.target.innerText = `✂️ Split Tool: ${isRazorMode ? 'ON' : 'OFF'}`;
+            e.target.innerText = `✂️ Split Tool (Click): ${isRazorMode ? 'ON' : 'OFF'}`;
             e.target.classList.toggle('active');
             document.querySelectorAll('.timeline-inner').forEach(tl => { if(isRazorMode) tl.classList.add('cursor-razor'); else tl.classList.remove('cursor-razor'); });
         });
         
         document.getElementById('btnDeleteClip').addEventListener('click', () => { deleteSelectedClip(); });
 
-        window.deleteSelectedClip = () => { 
-            saveHistoryState();
-            arrangerClips = arrangerClips.filter(c => c.id !== selectedClipId); 
-            vocalClips = vocalClips.filter(c => c.id !== selectedClipId); 
-            selectedClipId = null; renderClips(); 
-        };
+        window.deleteSelectedClip = () => { saveHistoryState(); arrangerClips = arrangerClips.filter(c => c.id !== selectedClipId); vocalClips = vocalClips.filter(c => c.id !== selectedClipId); selectedClipId = null; renderClips(); };
         window.clearVocalTrack = (tid) => { saveHistoryState(); vocalClips = vocalClips.filter(c => c.trackId !== tid); renderClips(); };
 
         // ==========================================
@@ -762,15 +787,10 @@
             if (isRecording || isWaitingToPunchIn) { stopPlayback(); return; }
             buildAudioGraph(); initVocalRouting(); initMasterRouting(); saveHistoryState();
 
-            // PUNCH IN LOGIC
             if (!isAppend) { clearVocalTrack(trackId); punchInTargetTime = 0; } 
             else { 
-                if (userPlayheadTime > 0) {
-                    punchInTargetTime = userPlayheadTime;
-                } else {
-                    punchInTargetTime = 0; 
-                    vocalClips.filter(c => c.trackId === trackId).forEach(c => { if (c.startTime + c.duration > punchInTargetTime) punchInTargetTime = c.startTime + c.duration; }); 
-                }
+                if (userPlayheadTime > 0) { punchInTargetTime = userPlayheadTime; } 
+                else { punchInTargetTime = 0; vocalClips.filter(c => c.trackId === trackId).forEach(c => { if (c.startTime + c.duration > punchInTargetTime) punchInTargetTime = c.startTime + c.duration; }); }
             }
 
             try {
@@ -808,13 +828,15 @@
             buildAudioGraph(); initMasterRouting(); initVocalRouting(); clearTimeout(timerID);
             playState = mode; 
             
-            // Adjust start time for punch-in / playhead
-            if (mode === 'STUDIO' && userPlayheadTime > 0) {
-                globalStartTime = audioCtx.currentTime - userPlayheadTime;
-                nextDrumTime = audioCtx.currentTime;
+            if (mode === 'STUDIO' || mode === 'SOLO') {
+                if (userPlayheadTime > 0) {
+                    globalStartTime = audioCtx.currentTime - userPlayheadTime;
+                    nextDrumTime = audioCtx.currentTime;
+                } else {
+                    globalStartTime = audioCtx.currentTime + 0.05; nextDrumTime = globalStartTime; 
+                }
             } else {
-                globalStartTime = audioCtx.currentTime + 0.05; 
-                nextDrumTime = globalStartTime; 
+                globalStartTime = audioCtx.currentTime + 0.05; nextDrumTime = globalStartTime; 
             }
             
             currentDrumStep = 0; lastScheduledTime = 0;
@@ -822,17 +844,13 @@
             if(mode === 'STUDIO' || mode === 'SOLO') {
                 vocalClips.forEach(c => {
                     if (mode === 'STUDIO' || (mode === 'SOLO' && c.trackId === targetTrackId)) {
-                        // Only play if clip is after or overlaps playhead
                         if (c.startTime + c.duration > userPlayheadTime) {
                             const trackSet = vocalTracks.find(t => t.id === c.trackId);
                             const src = audioCtx.createBufferSource(); src.buffer = c.buffer; src.playbackRate.value = trackSet.pitch; src.connect(trackSet.inputGain);
                             
-                            let startOffset = 0;
-                            if (userPlayheadTime > c.startTime) { startOffset = userPlayheadTime - c.startTime; }
-                            
+                            let startOffset = 0; if (userPlayheadTime > c.startTime) { startOffset = userPlayheadTime - c.startTime; }
                             const triggerTime = Math.max(audioCtx.currentTime, globalStartTime + c.startTime);
-                            src.start(triggerTime, startOffset); 
-                            c.sourceNode = src;
+                            src.start(triggerTime, startOffset); c.sourceNode = src;
                         }
                     }
                 });
@@ -845,28 +863,42 @@
             if(isRecording || isWaitingToPunchIn) { if (mediaRec && mediaRec.state !== 'inactive') mediaRec.stop(); isRecording = false; isWaitingToPunchIn = false; if(activeRecordingBlock) activeRecordingBlock.remove(); }
             vocalClips.forEach(c => { if(c.sourceNode) { try{c.sourceNode.stop();}catch(e){} } });
             
-            document.getElementById('btnPlayFull').innerText = "▶ Play Studio Mix"; document.getElementById('btnPlayFull').classList.remove('playing');
-            document.getElementById('btnPlayLoop').innerText = "▶ Play Loop"; document.getElementById('btnPlayLoop').classList.remove('playing');
             document.querySelectorAll('.btn-rec-append').forEach(btn => { btn.classList.remove('is-waiting', 'is-recording'); btn.innerText = '➕ Append / Punch'; });
             document.querySelectorAll('.btn-rec-overwrite').forEach(btn => { btn.classList.remove('is-recording'); });
-            updateRecordButtons();
-            
-            document.querySelectorAll('.playhead-dynamic, .playhead-beat').forEach(ph => ph.style.display = 'none');
+            updateRecordButtons(); document.querySelectorAll('.playhead-dynamic, .playhead-beat').forEach(ph => ph.style.display = 'none');
         }
 
-        document.getElementById('btnPlayLoop').onclick = (e) => { if(playState !== 'STOPPED') stopPlayback(); else { startPlayback('LOOP'); e.target.innerText = "⏸ Stop Loop"; e.target.classList.add('playing'); } };
-        document.getElementById('btnPlayFull').onclick = (e) => { if(playState !== 'STOPPED') stopPlayback(); else { startPlayback('STUDIO'); e.target.innerText = "⏸ Stop Studio"; e.target.classList.add('playing'); } };
-        window.playSolo = (tid) => { if(playState === 'SOLO') stopPlayback(); else { startPlayback('SOLO', tid); document.getElementById('btnPlayFull').innerText = "⏸ Stop Solo"; document.getElementById('btnPlayFull').classList.add('playing'); } };
+        // NEW TRUE PAUSE LOGIC
+        document.getElementById('btnPlayLoop').onclick = (e) => { 
+            if(playState !== 'STOPPED') { stopPlayback(); e.target.innerText = "▶ Play Loop"; e.target.classList.remove('playing'); } 
+            else { startPlayback('LOOP'); e.target.innerText = "⏸ Stop Loop"; e.target.classList.add('playing'); } 
+        };
+        
+        document.getElementById('btnPlayFull').onclick = (e) => { 
+            if(playState !== 'STOPPED') {
+                if (playState === 'STUDIO') { userPlayheadTime = audioCtx.currentTime - globalStartTime; updateUserPlayheadVisuals(); }
+                stopPlayback(); e.target.innerText = "▶ Play Studio Mix"; e.target.classList.remove('playing');
+            } else { 
+                startPlayback('STUDIO'); e.target.innerText = "⏸ Pause Studio"; e.target.classList.add('playing'); 
+            } 
+        };
+        
+        window.togglePlaySolo = (tid) => { 
+            const btn = document.getElementById(`btn-solo-${tid}`);
+            if(playState !== 'STOPPED') {
+                if (playState === 'SOLO') { userPlayheadTime = audioCtx.currentTime - globalStartTime; updateUserPlayheadVisuals(); }
+                stopPlayback(); document.querySelectorAll('.btn-solo').forEach(b => { b.innerText = "▶ Solo"; b.classList.remove('playing'); });
+            } else { 
+                startPlayback('SOLO', tid); btn.innerText = "⏸ Pause Solo"; btn.classList.add('playing'); 
+            } 
+        };
 
         function drawSyncGrids() {
             const stepPx = (60/120/4) * PPS; 
             document.querySelectorAll('.grid-canvas').forEach(canvas => {
                 const p = canvas.parentElement; canvas.width = p.clientWidth; canvas.height = p.clientHeight;
                 const ctx = canvas.getContext('2d'); ctx.clearRect(0,0, canvas.width, canvas.height);
-                for(let x=0; x<canvas.width; x+=stepPx) {
-                    ctx.beginPath(); ctx.strokeStyle = Math.round(x/stepPx)%4===0 ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.05)';
-                    ctx.moveTo(x,0); ctx.lineTo(x,canvas.height); ctx.stroke();
-                }
+                for(let x=0; x<canvas.width; x+=stepPx) { ctx.beginPath(); ctx.strokeStyle = Math.round(x/stepPx)%4===0 ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.05)'; ctx.moveTo(x,0); ctx.lineTo(x,canvas.height); ctx.stroke(); }
             });
         }
 
@@ -915,23 +947,17 @@
             setUint32(sampleRate); setUint32(sampleRate * 2 * numOfChan); setUint16(numOfChan * 2); setUint16(16); setUint32(0x61746164); setUint32(length - pos - 4);
             for(let i=0; i<buffer.numberOfChannels; i++) channels.push(buffer.getChannelData(i));
             while(offset < buffer.length) {
-                for(let i=0; i<numOfChan; i++) {
-                    let sample = Math.max(-1, Math.min(1, channels[i][offset])); sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767) | 0;
-                    view.setInt16(pos, sample, true); pos += 2;
-                } offset++;
+                for(let i=0; i<numOfChan; i++) { let sample = Math.max(-1, Math.min(1, channels[i][offset])); sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767) | 0; view.setInt16(pos, sample, true); pos += 2; } offset++;
             }
             let binary = ''; const bytes = new Uint8Array(out); const len = bytes.byteLength;
-            for (let i = 0; i < len; i++) { binary += String.fromCharCode(bytes[i]); }
-            return window.btoa(binary);
+            for (let i = 0; i < len; i++) { binary += String.fromCharCode(bytes[i]); } return window.btoa(binary);
         }
 
         async function base64ToAudioBuffer(base64) {
             const binaryString = window.atob(base64); const len = binaryString.length; const bytes = new Uint8Array(len);
-            for (let i = 0; i < len; i++) { bytes[i] = binaryString.charCodeAt(i); }
-            return await audioCtx.decodeAudioData(bytes.buffer);
+            for (let i = 0; i < len; i++) { bytes[i] = binaryString.charCodeAt(i); } return await audioCtx.decodeAudioData(bytes.buffer);
         }
 
-        // 1. Export Standalone HTML file
         document.getElementById('btnSaveHtml').addEventListener('click', () => {
             const btn = document.getElementById('btnSaveHtml'); const orig = btn.innerHTML; btn.innerText = '⏳ Bundling...'; btn.disabled = true;
             setTimeout(() => {
@@ -946,13 +972,10 @@
             }, 50);
         });
 
-        // Offline Rendering Core
         async function renderOfflineMix() {
-            buildAudioGraph();
-            let maxDuration = 2; 
+            buildAudioGraph(); let maxDuration = 2; 
             arrangerClips.forEach(c => { if(c.startTime + c.duration > maxDuration) maxDuration = c.startTime + c.duration; });
-            vocalClips.forEach(c => { if (c.startTime + c.duration > maxDuration) maxDuration = c.startTime + c.duration; });
-            maxDuration += 0.5; 
+            vocalClips.forEach(c => { if (c.startTime + c.duration > maxDuration) maxDuration = c.startTime + c.duration; }); maxDuration += 0.5; 
 
             const offlineCtx = new OfflineAudioContext(2, audioCtx.sampleRate * maxDuration, audioCtx.sampleRate);
             const offlineMaster = offlineCtx.createGain(); offlineMaster.connect(offlineCtx.destination);
@@ -970,8 +993,7 @@
 
             const offlineVocalTracks = vocalTracks.map(t => {
                 const g = offlineCtx.createGain(); const rMix = offlineCtx.createGain(); const conv = offlineCtx.createConvolver(); conv.buffer = offlineReverbBuffer;
-                const d = offlineCtx.createDelay(5.0); const fb = offlineCtx.createGain(); const dMix = offlineCtx.createGain();
-                d.delayTime.value = t.echo > 0 ? (60 / 120) * 0.75 : 0; fb.gain.value = 0.4;
+                const d = offlineCtx.createDelay(5.0); const fb = offlineCtx.createGain(); const dMix = offlineCtx.createGain(); d.delayTime.value = t.echo > 0 ? (60 / 120) * 0.75 : 0; fb.gain.value = 0.4;
                 d.connect(fb); fb.connect(d); d.connect(dMix); dMix.connect(offlineMaster);
                 g.connect(offlineMaster); g.connect(conv); conv.connect(rMix); rMix.connect(offlineMaster); g.connect(d); g.gain.value = t.volume; rMix.gain.value = t.reverb; dMix.gain.value = t.echo;
                 return { id: t.id, inputGain: g, pitch: t.pitch };
@@ -991,15 +1013,10 @@
                 }
             });
 
-            vocalClips.forEach(c => {
-                const trackSettings = offlineVocalTracks.find(t => t.id === c.trackId);
-                const source = offlineCtx.createBufferSource(); source.buffer = c.buffer; source.playbackRate.value = trackSettings.pitch; source.connect(trackSettings.inputGain); source.start(c.startTime);
-            });
-
+            vocalClips.forEach(c => { const trackSettings = offlineVocalTracks.find(t => t.id === c.trackId); const source = offlineCtx.createBufferSource(); source.buffer = c.buffer; source.playbackRate.value = trackSettings.pitch; source.connect(trackSettings.inputGain); source.start(c.startTime); });
             return await offlineCtx.startRendering();
         }
 
-        // 2. Export WAV
         document.getElementById('btnExportWav').addEventListener('click', async (e) => {
             const btn = e.target; const orig = btn.innerHTML; btn.innerText = "⏳ Bouncing WAV..."; btn.disabled = true;
             const renderedBuffer = await renderOfflineMix();
@@ -1010,39 +1027,23 @@
             setUint32(0x46464952); setUint32(length - 8); setUint32(0x45564157); setUint32(0x20746d66); setUint32(16); setUint16(1); setUint16(numOfChan);
             setUint32(sampleRate); setUint32(sampleRate * 2 * numOfChan); setUint16(numOfChan * 2); setUint16(16); setUint32(0x61746164); setUint32(length - pos - 4);
             for(let i=0; i<renderedBuffer.numberOfChannels; i++) channels.push(renderedBuffer.getChannelData(i));
-            while(offset < renderedBuffer.length) {
-                for(let i=0; i<numOfChan; i++) {
-                    let sample = Math.max(-1, Math.min(1, channels[i][offset])); sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767) | 0; view.setInt16(pos, sample, true); pos += 2;
-                } offset++;
-            }
+            while(offset < renderedBuffer.length) { for(let i=0; i<numOfChan; i++) { let sample = Math.max(-1, Math.min(1, channels[i][offset])); sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767) | 0; view.setInt16(pos, sample, true); pos += 2; } offset++; }
             const wavBlob = new Blob([out], { type: "audio/wav" }); const url = URL.createObjectURL(wavBlob);
             const a = document.createElement('a'); a.style.display = 'none'; a.href = url; a.download = 'Scratchpad_Mix.wav'; document.body.appendChild(a); a.click();
             btn.innerHTML = orig; btn.disabled = false;
         });
 
-        // 3. Export WEBM (Compressed)
         document.getElementById('btnExportWebm').addEventListener('click', async (e) => {
             const btn = e.target; const orig = btn.innerHTML; btn.innerText = "⏳ Compressing..."; btn.disabled = true;
             const renderedBuffer = await renderOfflineMix();
-            
-            // Stream the offline buffer through a MediaRecorder to get compressed WEBM audio
-            const tempCtx = new AudioContext();
-            const dest = tempCtx.createMediaStreamDestination();
-            const source = tempCtx.createBufferSource();
-            source.buffer = renderedBuffer;
-            source.connect(dest);
-            
-            const recorder = new MediaRecorder(dest.stream);
-            const chunks = [];
-            recorder.ondataavailable = e => chunks.push(e.data);
+            const tempCtx = new AudioContext(); const dest = tempCtx.createMediaStreamDestination(); const source = tempCtx.createBufferSource(); source.buffer = renderedBuffer; source.connect(dest);
+            const recorder = new MediaRecorder(dest.stream); const chunks = []; recorder.ondataavailable = e => chunks.push(e.data);
             recorder.onstop = () => {
-                const blob = new Blob(chunks, { type: 'audio/webm' });
-                const url = URL.createObjectURL(blob);
+                const blob = new Blob(chunks, { type: 'audio/webm' }); const url = URL.createObjectURL(blob);
                 const a = document.createElement('a'); a.style.display = 'none'; a.href = url; a.download = 'Scratchpad_Mix_Compressed.webm'; document.body.appendChild(a); a.click();
                 btn.innerHTML = orig; btn.disabled = false; tempCtx.close();
             };
-            recorder.start(); source.start(0);
-            source.onended = () => recorder.stop();
+            recorder.start(); source.start(0); source.onended = () => recorder.stop();
         });
 
         initApp();
