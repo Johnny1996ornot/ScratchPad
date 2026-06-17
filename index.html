@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scratchpad - Pro Studio V12</title>
+    <title>Scratchpad - Pro Studio V13</title>
     <style>
         /* --- CORE STYLING & DAW THEME --- */
         :root {
@@ -97,7 +97,6 @@
         .btn-master-full { background: var(--primary); font-size: 13px; padding: 8px 16px;}
         .btn-master-full.playing { background: var(--warning); color: black;}
         
-        /* Expanded Mic Selector */
         .mic-select { background: var(--surface); color: white; padding: 6px; border-radius:6px; border:1px solid var(--border); width: 100%; max-width: 350px; font-size: 12px;}
         
         .timeline-inner { height: 90px; position: relative; background: #090c10; }
@@ -137,7 +136,7 @@
                 <span>Pro Arranger</span>
             </div>
             
-            <a href="YOUR_LINK_HERE" target="_blank" class="kofi-btn">☕ Support Project</a>
+            <a href="https://buymeacoffee.com/jpramirez" target="_blank" class="kofi-btn">☕ Support Project</a>
 
             <div class="export-menu">
                 <h3>📤 Export Project</h3>
@@ -585,7 +584,7 @@
             renderClips();
         }
 
-        // NEW: Split Selected Clip at Playhead
+        // Split Selected Clip at Playhead
         window.splitSelectedClipAtPlayhead = () => {
             if (!selectedClipId || userPlayheadTime <= 0) return;
             saveHistoryState();
@@ -705,36 +704,93 @@
 
         window.updateVoxFX = (id, param, val) => { const t = vocalTracks.find(v => v.id === id); val = parseFloat(val); if(param === 'vol') t.volume = val; if(param === 'pitch') t.pitch = val; if(param === 'reverb') t.reverb = val; if(param === 'echo') t.echo = val; applyVoxFX(t); };
 
+        // UPGRADED SYNTHESIS FOR "ACOUSTIC" FEEL
         function playSynth(type, pitch, time, context=audioCtx, dest=masterGain) {
             if (type === 'kick') {
-                const osc = context.createOscillator(), gain = context.createGain(); osc.connect(gain).connect(dest);
-                osc.frequency.setValueAtTime(120 * pitch, time); osc.frequency.exponentialRampToValueAtTime(40 * pitch, time + 0.1); osc.frequency.exponentialRampToValueAtTime(0.001, time + 0.8);
-                gain.gain.setValueAtTime(1, time); gain.gain.exponentialRampToValueAtTime(0.001, time + 0.8);
-                const clickOsc = context.createOscillator(), clickGain = context.createGain(); clickOsc.type = 'square'; clickOsc.frequency.value = 800;
-                clickGain.gain.setValueAtTime(0.3, time); clickGain.gain.exponentialRampToValueAtTime(0.001, time + 0.02); clickOsc.connect(clickGain).connect(dest); clickOsc.start(time); clickOsc.stop(time + 0.05); osc.start(time); osc.stop(time + 0.8);
+                const osc = context.createOscillator(), gain = context.createGain();
+                osc.connect(gain).connect(dest);
+                // Softer, deeper sweep for an acoustic feel
+                osc.frequency.setValueAtTime(120 * pitch, time);
+                osc.frequency.exponentialRampToValueAtTime(40 * pitch, time + 0.1);
+                osc.frequency.exponentialRampToValueAtTime(0.001, time + 0.5);
+                gain.gain.setValueAtTime(1.5, time);
+                gain.gain.exponentialRampToValueAtTime(0.001, time + 0.5);
+                osc.start(time); osc.stop(time + 0.5);
+                
+                // Add a muffled felt-beater click
+                const clickOsc = context.createOscillator(), clickGain = context.createGain(), clickFilter = context.createBiquadFilter();
+                clickOsc.type = 'sine'; clickOsc.frequency.value = 400;
+                clickFilter.type = 'lowpass'; clickFilter.frequency.value = 1000;
+                clickGain.gain.setValueAtTime(0.5, time); clickGain.gain.exponentialRampToValueAtTime(0.001, time + 0.03);
+                clickOsc.connect(clickFilter).connect(clickGain).connect(dest);
+                clickOsc.start(time); clickOsc.stop(time + 0.05);
+
             } else if (type === 'snare') {
+                // Body resonance of the acoustic snare
+                const osc = context.createOscillator(), oGain = context.createGain();
+                osc.type = 'triangle'; osc.frequency.setValueAtTime(180 * pitch, time);
+                oGain.gain.setValueAtTime(0.7, time); oGain.gain.exponentialRampToValueAtTime(0.01, time + 0.2);
+                osc.connect(oGain).connect(dest);
+                osc.start(time); osc.stop(time + 0.2);
+
+                // Rattling snare wires (noise through bandpass)
                 const noise = context.createBufferSource(), filter = context.createBiquadFilter(), gain = context.createGain();
-                let nBuffer = context.createBuffer(1, context.sampleRate * 0.5, context.sampleRate); let nData = nBuffer.getChannelData(0); for (let i = 0; i < nData.length; i++) nData[i] = Math.random() * 2 - 1;
-                noise.buffer = nBuffer; filter.type = 'highpass'; filter.frequency.value = 1000 * pitch; gain.gain.setValueAtTime(1, time); gain.gain.exponentialRampToValueAtTime(0.01, time + 0.25);
-                noise.connect(filter).connect(gain).connect(dest); noise.start(time); noise.stop(time + 0.25);
-                const osc = context.createOscillator(), oGain = context.createGain(); osc.type = 'triangle'; osc.connect(oGain).connect(dest);
-                osc.frequency.setValueAtTime(250 * pitch, time); oGain.gain.setValueAtTime(0.8, time); oGain.gain.exponentialRampToValueAtTime(0.01, time + 0.15); osc.start(time); osc.stop(time + 0.2);
+                let nBuffer = context.createBuffer(1, context.sampleRate * 0.3, context.sampleRate);
+                let nData = nBuffer.getChannelData(0); for (let i = 0; i < nData.length; i++) nData[i] = Math.random() * 2 - 1;
+                noise.buffer = nBuffer;
+                filter.type = 'bandpass'; filter.frequency.value = 2500 * pitch; 
+                gain.gain.setValueAtTime(0.8, time); gain.gain.exponentialRampToValueAtTime(0.001, time + 0.25);
+                noise.connect(filter).connect(gain).connect(dest);
+                noise.start(time); noise.stop(time + 0.25);
+
             } else if (type === 'hihat') {
-                const noise = context.createBufferSource(), filter = context.createBiquadFilter(), gain = context.createGain();
-                let nBuffer = context.createBuffer(1, context.sampleRate * 0.1, context.sampleRate); let nData = nBuffer.getChannelData(0); for (let i = 0; i < nData.length; i++) nData[i] = Math.random() * 2 - 1;
-                noise.buffer = nBuffer; filter.type = 'highpass'; filter.frequency.value = 7000 * pitch; gain.gain.setValueAtTime(0.6, time); gain.gain.exponentialRampToValueAtTime(0.01, time + 0.05);
-                noise.connect(filter).connect(gain).connect(dest); noise.start(time); noise.stop(time + 0.05);
+                // Metallic hi-hat (filtered noise)
+                const noise = context.createBufferSource(), filter = context.createBiquadFilter(), filter2 = context.createBiquadFilter(), gain = context.createGain();
+                let nBuffer = context.createBuffer(1, context.sampleRate * 0.1, context.sampleRate);
+                let nData = nBuffer.getChannelData(0); for (let i = 0; i < nData.length; i++) nData[i] = Math.random() * 2 - 1;
+                noise.buffer = nBuffer;
+                filter.type = 'highpass'; filter.frequency.value = 5000 * pitch;
+                filter2.type = 'bandpass'; filter2.frequency.value = 8000 * pitch;
+                
+                gain.gain.setValueAtTime(0.5, time);
+                gain.gain.exponentialRampToValueAtTime(0.001, time + 0.08); // Quick decay
+                
+                noise.connect(filter).connect(filter2).connect(gain).connect(dest);
+                noise.start(time); noise.stop(time + 0.1);
             }
         }
 
+        // UPGRADED PIANO SYNTHESIS
         function playChord(chord, type, pitch, time, context=audioCtx, dest=masterGain) {
-            const freqs = {'C':[261,329,392],'Dm':[293,349,440],'Em':[329,392,493],'F':[349,440,523],'G':[392,493,587],'Am':[440,523,659]}[chord] || [261,329,392];
+            const freqs = {'C':[261.63, 329.63, 392.00],'Dm':[293.66, 349.23, 440.00],'Em':[329.63, 392.00, 493.88],'F':[349.23, 440.00, 523.25],'G':[392.00, 493.88, 587.33],'Am':[440.00, 523.25, 659.25]}[chord] || [261.63, 329.63, 392.00];
             freqs.forEach(f => {
-                const osc1 = context.createOscillator(), gain = context.createGain(); osc1.type = type === 'synth' ? 'square' : 'sine';
-                if(type === 'piano') { const osc2 = context.createOscillator(); osc2.type = 'triangle'; osc2.frequency.value = f * pitch; osc2.connect(gain); osc2.start(time); osc2.stop(time + 1.2); }
-                osc1.frequency.value = f * pitch; osc1.connect(gain); gain.connect(dest);
-                gain.gain.setValueAtTime(0, time); gain.gain.linearRampToValueAtTime(type === 'synth' ? 0.15 : 0.3, time + 0.05); gain.gain.exponentialRampToValueAtTime(0.001, time + 1.2);
-                osc1.start(time); osc1.stop(time + 1.2);
+                if(type === 'synth') {
+                    const osc = context.createOscillator(), gain = context.createGain();
+                    osc.type = 'square'; osc.frequency.value = f * pitch;
+                    osc.connect(gain); gain.connect(dest);
+                    gain.gain.setValueAtTime(0, time);
+                    gain.gain.linearRampToValueAtTime(0.1, time + 0.05);
+                    gain.gain.exponentialRampToValueAtTime(0.001, time + 1.2);
+                    osc.start(time); osc.stop(time + 1.2);
+                } else if (type === 'piano') {
+                    // "Acoustic" Piano Approximation
+                    const osc1 = context.createOscillator(); osc1.type = 'sine'; osc1.frequency.value = f * pitch;
+                    const osc2 = context.createOscillator(); osc2.type = 'triangle'; osc2.frequency.value = f * 2 * pitch;
+                    
+                    const gain = context.createGain();
+                    const filter = context.createBiquadFilter(); filter.type = 'lowpass';
+                    filter.frequency.setValueAtTime(2000, time);
+                    filter.frequency.exponentialRampToValueAtTime(400, time + 1.5);
+
+                    osc1.connect(gain); osc2.connect(gain); gain.connect(filter); filter.connect(dest);
+                    
+                    gain.gain.setValueAtTime(0, time);
+                    gain.gain.linearRampToValueAtTime(0.4, time + 0.02); // Hammer strike
+                    gain.gain.exponentialRampToValueAtTime(0.001, time + 2.5); // String resonance fade
+
+                    osc1.start(time); osc2.start(time);
+                    osc1.stop(time + 2.5); osc2.stop(time + 2.5);
+                }
             });
         }
 
@@ -868,7 +924,6 @@
             updateRecordButtons(); document.querySelectorAll('.playhead-dynamic, .playhead-beat').forEach(ph => ph.style.display = 'none');
         }
 
-        // NEW TRUE PAUSE LOGIC
         document.getElementById('btnPlayLoop').onclick = (e) => { 
             if(playState !== 'STOPPED') { stopPlayback(); e.target.innerText = "▶ Play Loop"; e.target.classList.remove('playing'); } 
             else { startPlayback('LOOP'); e.target.innerText = "⏸ Stop Loop"; e.target.classList.add('playing'); } 
